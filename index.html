@@ -215,4 +215,49 @@
         });
     </script>
 </body>
+</html><!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interação com o Mouse</title>
+    <style>
+        .interativo {
+            width: 200px;
+            height: 100px;
+            background-color: lightblue;
+            text-align: center;
+            line-height: 100px;
+            border-radius: 10px;
+            margin: 20px;
+        }
+        .hover {
+            background-color: lightcoral;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="interativo" id="areaMouse">
+        Clique ou passe o mouse aqui
+    </div>
+
+    <script>
+        const areaMouse = document.getElementById('areaMouse');
+
+        // Evento de clique
+        areaMouse.addEventListener('click', function() {
+            alert('Você clicou no elemento!');
+        });
+
+        // Evento de hover (passar o mouse por cima)
+        areaMouse.addEventListener('mouseover', function() {
+            areaMouse.classList.add('hover');
+        });
+
+        areaMouse.addEventListener('mouseout', function() {
+            areaMouse.classList.remove('hover');
+        });
+    </script>
+</body>
 </html>
