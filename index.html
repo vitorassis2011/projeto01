@@ -1,263 +1,169 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minha Primeira Página</title>
-</head>
-<body>
-    <h1>Olá, Mundo!</h1>
-    <p>Este é o meu primeiro código em HTML.</p>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Batalha Animal na Floresta</title>
-    <style>
-        body {
-            font-family: 'Press Start 2P', cursive; /* Fonte mais "pixel art" */
-            text-align: center;
-            background: url('https://i.imgur.com/r02qS6n.png') no-repeat center center fixed; /* Imagem de fundo de floresta */
-            background-size: cover;
-            color: white;
-            margin: 0;
-            padding: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-        }
+import pygame
+import sys
 
-        /* Importar fonte para estilo pixel art */
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+# --- CONFIGURAÇÕES GLOBAIS ---
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 700
+FPS = 60
 
+# Cores
+WHITE = (255, 255, 255)
+BLUE  = (100, 149, 237) # Cor do céu
+RED   = (255, 0, 0)
+BROWN = (139, 69, 19)
+GREEN = (34, 139, 34)
 
-        h1 { font-size: 2.5em; margin-bottom: 20px; color: #f1c40f; }
-        .arena {
-            display: flex;
-            justify-content: space-around;
-            align-items: flex-start; /* Alinha os itens no topo */
-            margin-top: 30px;
-            background: rgba(0,0,0,0.4); /* Fundo semi-transparente para melhor leitura */
-            padding: 20px;
-            border-radius: 15px;
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
-            box-shadow: 0 0 20px rgba(0,0,0,0.6);
-        }
-        .animal-card {
-            background: rgba(44, 62, 80, 0.9); /* Cor mais escura para os cards */
-            width: 250px;
-            padding: 20px;
-            border: 3px solid #3498db;
-            border-radius: 15px;
-            margin: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        }
-        .animal-card h2 { color: #ecf0f1; font-size: 1.8em; margin-top: 0; }
-        .hp-bar { width: 100%; height: 25px; background: #c0392b; margin: 15px 0; border-radius: 12px; overflow: hidden; border: 1px solid #7f8c8d; }
-        .hp-fill { height: 100%; background: #27ae60; transition: width 0.5s ease-out; }
-        .animal-img {
-            width: 120px;
-            height: 120px;
-            object-fit: contain; /* Garante que a imagem se encaixe sem cortar */
-            margin-bottom: 10px;
-            background-color: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            padding: 5px;
-            border: 1px solid #fff;
-        }
-        button.attack-btn {
-            padding: 12px 25px;
-            cursor: pointer;
-            background: #e67e22;
-            border: none;
-            color: white;
-            font-weight: bold;
-            font-size: 1.1em;
-            border-radius: 8px;
-            transition: background 0.3s, transform 0.1s;
-        }
-        button.attack-btn:hover:not(:disabled) {
-            background: #d35400;
-            transform: translateY(-2px);
-        }
-        button.attack-btn:disabled {
-            background: #7f8c8d;
-            cursor: not-allowed;
-        }
-        #log {
-            margin-top: 25px;
-            font-style: italic;
-            color: #bdc3c7;
-            font-size: 1.1em;
-            min-height: 30px; /* Para evitar pulos de layout */
-        }
-        #reset-btn {
-            display: none;
-            margin: 25px auto;
-            padding: 15px 30px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.2em;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        #reset-btn:hover {
-            background: #2980b9;
-        }
+# --- CLASSES PRINCIPAIS ---
 
-        .selection-area {
-            margin-bottom: 30px;
-            background: rgba(0,0,0,0.5);
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .selection-area select {
-            padding: 10px;
-            font-size: 1em;
-            margin: 0 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
-            color: #333;
-        }
-        .selection-area button {
-            padding: 10px 20px;
-            font-size: 1em;
-            background: #2ecc71;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .selection-area button:hover {
-            background: #27ae60;
-        }
-        .game-controls {
-            margin-top: 20px;
-        }
-        .game-controls button {
-            margin: 0 10px;
-        }
+class Player(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface((40, 60))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        
+        # Vetores de movimento
+        self.change_x = 0
+        self.change_y = 0
+        self.speed = 6
+        self.jump_force = -15
+        self.gravity = 0.8
+        
+    def update(self, platforms):
+        # Aplicar Gravidade
+        self.calc_grav()
+        
+        # Movimento Horizontal
+        self.rect.x += self.change_x
+        block_hit_list = pygame.sprite.spritecollide(self, platforms, False)
+        for block in block_hit_list:
+            if self.change_x > 0:
+                self.rect.right = block.rect.left
+            elif self.change_x < 0:
+                self.rect.left = block.rect.right
 
-        /* Esconde a arena inicialmente */
-        .arena-container {
-            display: none;
-        }
+        # Movimento Vertical
+        self.rect.y += self.change_y
+        block_hit_list = pygame.sprite.spritecollide(self, platforms, False)
+        for block in block_hit_list:
+            if self.change_y > 0:
+                self.rect.bottom = block.rect.top
+                self.change_y = 0
+            elif self.change_y < 0:
+                self.rect.top = block.rect.bottom
+                self.change_y = 0
 
-    </style>
-</head>
-<body>
+    def calc_grav(self):
+        if self.change_y == 0:
+            self.change_y = 1
+        else:
+            self.change_y += self.gravity
 
-    <h1>Batalha Animal na Floresta</h1>
+    def jump(self, platforms):
+        # Verifica se o jogador está no chão para pular
+        self.rect.y += 2
+        hit_list = pygame.sprite.spritecollide(self, platforms, False)
+        self.rect.y -= 2
+        
+        if len(hit_list) > 0:
+            self.change_y = self.jump_force
 
-    <div class="selection-area" id="selectionScreen">
-        <p>Escolha seus guerreiros para a batalha:</p>
-        <select id="animal1Select"></select>
-        <span>VS</span>
-        <select id="animal2Select"></select>
-        <button onclick="iniciarBatalha()">Iniciar Batalha!</button>
-    </div>
+    def go_left(self):
+        self.change_x = -self.speed
 
-    <div class="arena-container" id="gameArena">
-        <div class="arena">
-            <div class="animal-card" id="player1Card">
-                <h2 id="player1Name"></h2>
-                <img id="player1Img" class="animal-img" src="" alt="">
-                <div class="hp-bar"><div id="hp1" class="hp-fill"></div></div>
-                <div class="game-controls">
-                    <button class="attack-btn" onclick="atacar(1)">Atacar!</button>
-                </div>
-            </div>
+    def go_right(self):
+        self.change_x = self.speed
 
-            <div class="animal-card" id="player2Card">
-                <h2 id="player2Name"></h2>
-                <img id="player2Img" class="animal-img" src="" alt="">
-                <div class="hp-bar"><div id="hp2" class="hp-fill"></div></div>
-                <div class="game-controls">
-                    <button class="attack-btn" onclick="atacar(2)">Atacar!</button>
-                </div>
-            </div>
-        </div>
+    def stop(self):
+        self.change_x = 0
 
-        <p id="log">Escolha os animais e inicie a batalha!</p>
-        <button onclick="resetGame()" id="reset-btn">Nova Batalha</button>
-    </div>
+class Platform(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, height):
+        super().__init__()
+        self.image = pygame.Surface((width, height))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+class Level:
+    def __init__(self, player):
+        self.platform_list = pygame.sprite.Group()
+        self.player = player
+        self.world_shift = 0 # Para o efeito de câmera
+
+    def update(self):
+        self.platform_list.update()
+
+    def draw(self, screen):
+        screen.fill(BLUE)
+        self.platform_list.draw(screen)
+
+    def shift_world(self, shift_x):
+        self.world_shift += shift_x
+        for platform in self.platform_list:
+            platform.rect.x += shift_x
+
+# --- LOOP PRINCIPAL ---
+
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("Super Mario Clone - Engine")
+    clock = pygame.time.Clock()
+
+    player = Player(100, SCREEN_HEIGHT - 150)
+    level = Level(player)
+    
+    # Criando o cenário (Chão e plataformas)
+    level_data = [
+        [0, 650, 2000, 50],
+        [500, 500, 200, 40],
+        [800, 400, 200, 40],
+        [1100, 300, 200, 40],
+        [1400, 500, 400, 40],
+    ]
+    
+    for plat in level_data:
+        block = Platform(plat[0], plat[1], plat[2], plat[3])
+        level.platform_list.add(block)
+
+    active_sprite_list = pygame.sprite.Group()
+    active_sprite_list.add(player)
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    player.go_left()
+                if event.key == pygame.K_RIGHT:
+                    player.go_right()
+                if event.key == pygame.K_SPACE:
+                    player.jump(level.platform_list)
+            
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT and player.change_x < 0:
+                    player.stop()
+                if event.key == pygame.K_RIGHT and player.change_x > 0:
+                    player.stop()
+
+        # Atualização
+        player.update(level.platform_list)
+        
+        # Lógica da Câmera (Scrolling)
+        if player.rect.right >= 500:
+            diff = player.rect.right - 500
+            player.rect.right = 500
+            level.shift_world(-diff)
+
+        if player.rect.left <= 120:
+            diff = 120 - player.rect.left
+            player.rect.left = 12
 
 
-    <script>
-        const animais = {
-            "Polvo": { emoji: "🐙", img: "https://i.imgur.com/vH1N5tL.png", forca: 15, defesa: 5 }, // Imagem fictícia de polvo
-            "Leão": { emoji: "🦁", img: "https://i.imgur.com/k6lP9tE.png",
-                    
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8" />
-    <title>Detecção de Clique</title>
-</head>
-<body>
-    <h1>Teste de Clique do Mouse</h1>
-    <script>
-        // Adiciona um evento de clique ao documento inteiro
-        document.addEventListener('click', function(event) {
-            // Exibe a mensagem na tela
-            alert('Você clicou na página!');
-            // Registra as coordenadas X e Y no console
-            console.log('Coordenadas do clique:', 'X:', event.clientX, 'Y:', event.clientY);
-        });
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interação com o Mouse</title>
-    <style>
-        .interativo {
-            width: 200px;
-            height: 100px;
-            background-color: lightblue;
-            text-align: center;
-            line-height: 100px;
-            border-radius: 10px;
-            margin: 20px;
-        }
-        .hover {
-            background-color: lightcoral;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="interativo" id="areaMouse">
-        Clique ou passe o mouse aqui
-    </div>
-
-    <script>
-        const areaMouse = document.getElementById('areaMouse');
-
-        // Evento de clique
-        areaMouse.addEventListener('click', function() {
-            alert('Você clicou no elemento!');
-        });
-
-        // Evento de hover (passar o mouse por cima)
-        areaMouse.addEventListener('mouseover', function() {
-            areaMouse.classList.add('hover');
-        });
-
-        areaMouse.addEventListener('mouseout', function() {
-            areaMouse.classList.remove('hover');
-        });
-    </script>
-</body>
-</html>
