@@ -2,607 +2,442 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Super Mario - HTML5 Super Detalhado</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏎️ CORRIDA INFINITA PIXEL ULTRA - R$1 ou R$10</title>
     <style>
         body {
             margin: 0;
+            padding: 0;
             background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
             overflow: hidden;
-            font-family: 'Press Start 2P', Arial, sans-serif;
         }
         canvas {
-            border: 8px solid #fff;
+            border: 4px solid #0f0;
             image-rendering: pixelated;
-            box-shadow: 0 0 30px #f00;
+            box-shadow: 0 0 30px #0f0;
+        }
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border: 3px solid #0f0;
+            font-size: 18px;
+            pointer-events: none;
+        }
+        #carPanel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 30, 0, 0.95);
+            border: 5px solid #0f0;
+            padding: 20px;
+            width: 620px;
+            display: none;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            box-shadow: 0 0 40px #0f0;
+        }
+        .carOption {
+            width: 180px;
+            padding: 10px;
+            border: 3px solid #0f0;
+            background: #001100;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .carOption:hover {
+            background: #003300;
+            transform: scale(1.08);
+            box-shadow: 0 0 20px #0f0;
+        }
+        .carPreview {
+            width: 100%;
+            height: 80px;
+            background: #111;
+            margin-bottom: 8px;
+            border: 2px solid #0f0;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #gameOverScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 6px solid #f00;
+            padding: 40px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
         }
     </style>
 </head>
 <body>
-    <canvas id="canvas" width="800" height="450"></canvas>
 
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const WIDTH = 800;
-        const HEIGHT = 450;
+<canvas id="game" width="800" height="600"></canvas>
 
-        // ============ VARIÁVEIS GLOBAIS ============
-        let mario = {
-            x: 100,
-            y: 300,
-            width: 32,
-            height: 42,
-            velX: 0,
-            velY: 0,
-            speed: 5.5,
-            jumpPower: -16.5,
-            facing: 1,
-            jumping: false,
-            frame: 0
-        };
+<div id="hud">
+    <div>🚗 CARRO: <span id="carName">FIAT MOBI R$1,00</span></div>
+    <div>💨 VELOCIDADE: <span id="speed">0</span> km/h</div>
+    <div>📏 DISTÂNCIA: <span id="distance">0</span> km</div>
+    <div style="font-size:14px; margin-top:8px;">W = Acelerar S = Frear A/D = Esquerda/Direita C = Trocar Carro</div>
+</div>
 
-        let cameraX = 0;
-        let gravity = 0.85;
-        let friction = 0.82;
-        let score = 0;
-        let coinsCollected = 0;
-        let lives = 3;
-        let currentLevel = 1;
-        let gameState = 'playing'; // playing, won, gameover
+<div id="carPanel">
+    <h2 style="width:100%; color:#0f0; margin:0 0 15px 0;">ESCOLHA SEU CARRO (ultra detalhado)</h2>
+    
+    <div class="carOption" onclick="switchCar(0)">
+        <div class="carPreview" id="preview0"></div>
+        <strong>FIAT MOBI R$1,00</strong><br>
+        <small>Velocidade máxima: 180 km/h • Barato e raiz</small>
+    </div>
+    
+    <div class="carOption" onclick="switchCar(1)">
+        <div class="carPreview" id="preview1"></div>
+        <strong>CARRO DE R$10,00</strong><br>
+        <small>Velocidade máxima: 240 km/h • Mais potente</small>
+    </div>
+    
+    <div class="carOption" onclick="switchCar(2)">
+        <div class="carPreview" id="preview2"></div>
+        <strong>TURBO ESPECIAL 2026</strong><br>
+        <small>Velocidade máxima: 320 km/h • O mais rápido</small>
+    </div>
 
-        let keys = {};
-        let platforms = [];
-        let enemies = [];
-        let collectibles = [];
-        let backgroundObjects = [];
-        let goal = { x: 0, y: 0 };
+    <button onclick="togglePanel()">FECHAR PAINEL</button>
+</div>
 
-        // ============ COLISÃO ============
-        function collides(a, b) {
-            return (
-                a.x < b.x + b.width &&
-                a.x + a.width > b.x &&
-                a.y < b.y + b.height &&
-                a.y + a.height > b.y
-            );
+<div id="gameOverScreen">
+    <h1 style="color:#f00; margin:0;">💥 GAME OVER!</h1>
+    <p style="font-size:24px; margin:15px 0;">Distância percorrida: <span id="finalDistance">0</span> km</p>
+    <p style="color:#0f0;">Você ultrapassou <span id="overtakes">0</span> adversários!</p>
+    <button onclick="restartGame()">REINICIAR (R)</button>
+</div>
+
+<script>
+// ===============================================
+// JOGO DE CORRIDA INFINITA PIXEL ULTRA DETALHADO
+// Controles: W A S D
+// Infinito + adversários + ultrapassagem livre
+// Painel para trocar de carro (C)
+// Estilo PIXEL ART com desenho super detalhado
+// ===============================================
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false; // PIXEL ART PURA
+
+// ===================== VARIÁVEIS DO JOGO =====================
+let player = {
+    x: 400,
+    y: 460,
+    speed: 0,
+    maxSpeed: 9,
+    accel: 0.22,
+    color: '#f0f0f0',
+    model: 0,
+    width: 48,
+    height: 78
+};
+
+const carModels = [
+    { name: "FIAT MOBI R$1,00", color: "#f0f0f0", maxSpeed: 9, wheelColor: "#222" },
+    { name: "CARRO DE R$10,00", color: "#00cc00", maxSpeed: 12, wheelColor: "#111" },
+    { name: "TURBO ESPECIAL", color: "#ff2200", maxSpeed: 15, wheelColor: "#ffff00" }
+];
+
+let opponents = [];
+let particles = [];           // partículas de escapamento
+let roadOffset = 0;
+let distance = 0;
+let overtakeCount = 0;
+let keys = {};
+let gameRunning = true;
+let lastTime = Date.now();
+
+// ===================== FUNÇÃO DE DESENHO DO CARRO PIXEL ART (ULTRA DETALHADA) =====================
+function drawCar(x, y, color, wheelColor, isPlayer = false, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    if (!isPlayer) ctx.scale(scale, scale); // adversários menores quando longe
+
+    // Sombra
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(-22, 38, 44, 12);
+
+    // Corpo principal
+    ctx.fillStyle = color;
+    ctx.fillRect(-22, -32, 44, 58);           // carroceria
+
+    // Teto / cabine
+    ctx.fillStyle = '#111111';
+    ctx.fillRect(-16, -26, 32, 24);
+
+    // Janelas (brilho)
+    ctx.fillStyle = '#88ccff';
+    ctx.fillRect(-13, -23, 10, 16);
+    ctx.fillRect(3, -23, 10, 16);
+
+    // Faróis dianteiros
+    ctx.fillStyle = '#ffff88';
+    ctx.fillRect(-18, -34, 6, 8);
+    ctx.fillRect(12, -34, 6, 8);
+
+    // Lanternas traseiras
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(-18, 18, 6, 6);
+    ctx.fillRect(12, 18, 6, 6);
+
+    // Detalhes laterais (linhas pixel)
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-22, -32, 44, 58);
+
+    // Rodas (ultra detalhadas)
+    ctx.fillStyle = wheelColor;
+    ctx.fillRect(-26, -22, 8, 18);   // roda esquerda
+    ctx.fillRect(18, -22, 8, 18);    // roda direita
+    ctx.fillRect(-26, 12, 8, 18);    // roda esquerda traseira
+    ctx.fillRect(18, 12, 8, 18);     // roda direita traseira
+
+    // Aro das rodas (detalhe pixel)
+    ctx.fillStyle = '#ddd';
+    ctx.fillRect(-24, -18, 4, 10);
+    ctx.fillRect(20, -18, 4, 10);
+    ctx.fillRect(-24, 16, 4, 10);
+    ctx.fillRect(20, 16, 4, 10);
+
+    // Faixa de corrida no capô
+    ctx.fillStyle = '#ffff00';
+    ctx.fillRect(-8, -30, 4, 12);
+
+    ctx.restore();
+}
+
+// ===================== FUNÇÃO DE DESENHO DA ESTRADA =====================
+function drawRoad() {
+    // Grama lateral
+    ctx.fillStyle = '#003300';
+    ctx.fillRect(0, 0, 800, 600);
+
+    // Estrada
+    ctx.fillStyle = '#222222';
+    ctx.fillRect(80, 0, 640, 600);
+
+    // Faixas laterais
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(78, 0, 6, 600);
+    ctx.fillRect(716, 0, 6, 600);
+
+    // Linhas centrais (movimentando)
+    ctx.strokeStyle = '#ffff00';
+    ctx.lineWidth = 8;
+    for (let i = -2; i < 12; i++) {
+        let y = (i * 70 + roadOffset) % 840 - 120;
+        ctx.beginPath();
+        ctx.moveTo(240, y);
+        ctx.lineTo(240, y + 45);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(400, y);
+        ctx.lineTo(400, y + 45);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(560, y);
+        ctx.lineTo(560, y + 45);
+        ctx.stroke();
+    }
+
+    // Efeito de asfalto (linhas finas)
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 30; i++) {
+        let y = (i * 25 + roadOffset * 1.3) % 650 - 50;
+        ctx.beginPath();
+        ctx.moveTo(100, y);
+        ctx.lineTo(700, y);
+        ctx.stroke();
+    }
+}
+
+// ===================== PARTICULAS DE ESCAPAMENTO =====================
+function createParticle() {
+    particles.push({
+        x: player.x - 18 + Math.random() * 36,
+        y: player.y + 35,
+        life: 25,
+        vy: 3 + Math.random() * 2
+    });
+}
+
+// ===================== SPAWN DE ADVERSÁRIOS =====================
+function spawnOpponent() {
+    if (opponents.length > 9) return;
+    
+    const laneX = [170, 320, 470, 620][Math.floor(Math.random() * 4)];
+    
+    opponents.push({
+        x: laneX + (Math.random() * 40 - 20),
+        y: -80 - Math.random() * 300,
+        speed: 3.5 + Math.random() * 5,
+        color: ['#ff8800', '#0088ff', '#ff00aa', '#aa8800'][Math.floor(Math.random() * 4)],
+        width: 48,
+        height: 78,
+        overtaken: false
+    });
+}
+
+// ===================== LOOP PRINCIPAL =====================
+function gameLoop() {
+    if (!gameRunning) return;
+
+    const now = Date.now();
+    const delta = now - lastTime;
+    lastTime = now;
+
+    // === ATUALIZAÇÃO ===
+    if (keys['w'] || keys['W']) {
+        player.speed = Math.min(player.speed + player.accel, carModels[player.model].maxSpeed);
+        if (Math.random() < 0.6) createParticle();
+    }
+    if (keys['s'] || keys['S']) {
+        player.speed = Math.max(player.speed - 0.45, 0);
+    }
+    if (keys['a'] || keys['A']) player.x -= 7.5;
+    if (keys['d'] || keys['D']) player.x += 7.5;
+
+    // Limites da pista
+    player.x = Math.max(110, Math.min(690, player.x));
+
+    // Velocidade mínima para sensação de movimento
+    if (player.speed < 1) player.speed = 1;
+
+    // Movimento dos adversários
+    for (let i = opponents.length - 1; i >= 0; i--) {
+        let o = opponents[i];
+        o.y += o.speed - player.speed * 0.7;   // relatividade = ultrapassagem!
+
+        // Ultrapassagem detectada
+        if (!o.overtaken && o.y > player.y - 30 && Math.abs(o.x - player.x) < 40) {
+            o.overtaken = true;
+            overtakeCount++;
         }
 
-        // ============ CARREGAR NÍVEL (2 níveis super detalhados) ============
-        function loadLevel(level) {
-            platforms = [];
-            enemies = [];
-            collectibles = [];
-            backgroundObjects = [];
-            currentLevel = level;
+        // Remove quando sai da tela
+        if (o.y > 700) opponents.splice(i, 1);
+    }
 
-            if (level === 1) {
-                // Chão principal longo
-                platforms.push({ x: 0, y: 380, width: 2800, height: 70, type: 'ground' });
-                
-                // Blocos de pergunta com moedas
-                platforms.push({ x: 420, y: 240, width: 50, height: 50, type: 'question', coin: true });
-                platforms.push({ x: 520, y: 240, width: 50, height: 50, type: 'question', coin: true });
-                platforms.push({ x: 620, y: 240, width: 50, height: 50, type: 'question', coin: true });
-                platforms.push({ x: 1120, y: 180, width: 50, height: 50, type: 'question', coin: true });
+    // Scroll da estrada
+    roadOffset = (roadOffset + player.speed * 4) % 140;
 
-                // Tijolos
-                platforms.push({ x: 720, y: 240, width: 50, height: 50, type: 'brick' });
-                platforms.push({ x: 770, y: 240, width: 50, height: 50, type: 'brick' });
+    distance += player.speed * 0.08;
 
-                // Canos clássicos
-                platforms.push({ x: 950, y: 310, width: 90, height: 140, type: 'pipe' });
-                platforms.push({ x: 1450, y: 260, width: 90, height: 190, type: 'pipe' });
-                platforms.push({ x: 1950, y: 310, width: 90, height: 140, type: 'pipe' });
+    // Spawn aleatório de adversários
+    if (Math.random() < 0.035) spawnOpponent();
 
-                // Plataformas flutuantes
-                platforms.push({ x: 1650, y: 210, width: 220, height: 25, type: 'solid' });
-                platforms.push({ x: 2200, y: 140, width: 120, height: 25, type: 'solid' });
+    // Atualiza partículas
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].y += particles[i].vy;
+        particles[i].life--;
+        if (particles[i].life <= 0) particles.splice(i, 1);
+    }
 
-                // Chão final
-                platforms.push({ x: 2550, y: 380, width: 400, height: 70, type: 'ground' });
+    // === RENDERIZAÇÃO ===
+    ctx.clearRect(0, 0, 800, 600);
 
-                // Inimigos Goombas
-                enemies.push({ x: 680, y: 340, width: 32, height: 32, velX: -1.8, alive: true });
-                enemies.push({ x: 1250, y: 340, width: 32, height: 32, velX: -1.8, alive: true });
-                enemies.push({ x: 1750, y: 170, width: 32, height: 32, velX: -1.8, alive: true });
-                enemies.push({ x: 2100, y: 340, width: 32, height: 32, velX: -1.8, alive: true });
+    drawRoad();
 
-                // Moedas flutuantes
-                collectibles.push({ x: 470, y: 170, width: 24, height: 24, collected: false });
-                collectibles.push({ x: 1570, y: 130, width: 24, height: 24, collected: false });
-                collectibles.push({ x: 2300, y: 280, width: 24, height: 24, collected: false });
-                collectibles.push({ x: 2650, y: 300, width: 24, height: 24, collected: false });
+    // Desenha adversários (ordem por Y para profundidade)
+    opponents.sort((a, b) => a.y - b.y);
+    opponents.forEach(o => {
+        const scale = Math.max(0.6, 1 - (o.y / 900));
+        drawCar(o.x, o.y, o.color, '#222', false, scale);
+    });
 
-                // Meta (bandeira)
-                goal = { x: 2750, y: 170 };
+    // Partículas de escapamento
+    ctx.fillStyle = '#ffaa00';
+    particles.forEach(p => {
+        ctx.globalAlpha = p.life / 25;
+        ctx.fillRect(p.x - 3, p.y, 6, 8);
+    });
+    ctx.globalAlpha = 1;
 
-                // Cenário (parallax)
-                backgroundObjects.push({ type: 'cloud', x: 80, y: 70 });
-                backgroundObjects.push({ type: 'cloud', x: 550, y: 40 });
-                backgroundObjects.push({ type: 'cloud', x: 1100, y: 90 });
-                backgroundObjects.push({ type: 'cloud', x: 1900, y: 55 });
-                backgroundObjects.push({ type: 'hill', x: 250, y: 340 });
-                backgroundObjects.push({ type: 'hill', x: 1250, y: 340 });
-                backgroundObjects.push({ type: 'bush', x: 380, y: 355 });
-                backgroundObjects.push({ type: 'bush', x: 850, y: 355 });
-                backgroundObjects.push({ type: 'bush', x: 1700, y: 355 });
-            } 
-            else if (level === 2) {
-                // Nível 2 ainda mais desafiador
-                platforms.push({ x: 0, y: 380, width: 3200, height: 70, type: 'ground' });
-                
-                platforms.push({ x: 350, y: 220, width: 50, height: 50, type: 'question', coin: true });
-                platforms.push({ x: 450, y: 150, width: 50, height: 50, type: 'question', coin: true });
-                platforms.push({ x: 800, y: 240, width: 50, height: 50, type: 'brick' });
-                platforms.push({ x: 1150, y: 180, width: 50, height: 50, type: 'question', coin: true });
-                
-                platforms.push({ x: 1400, y: 310, width: 100, height: 140, type: 'pipe' });
-                platforms.push({ x: 1850, y: 240, width: 100, height: 210, type: 'pipe' });
-                platforms.push({ x: 2400, y: 310, width: 100, height: 140, type: 'pipe' });
+    // Desenha jogador (sempre por cima)
+    drawCar(player.x, player.y, carModels[player.model].color, carModels[player.model].wheelColor, true);
 
-                platforms.push({ x: 1650, y: 180, width: 180, height: 25, type: 'solid' });
-                platforms.push({ x: 2150, y: 120, width: 140, height: 25, type: 'solid' });
-                platforms.push({ x: 2700, y: 200, width: 120, height: 25, type: 'solid' });
+    // HUD no canvas (velocidade)
+    ctx.fillStyle = '#0f0';
+    ctx.font = '22px Courier New';
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.floor(player.speed * 22) + ' km/h', 760, 40);
 
-                enemies.push({ x: 500, y: 340, width: 32, height: 32, velX: -2, alive: true });
-                enemies.push({ x: 980, y: 340, width: 32, height: 32, velX: -2, alive: true });
-                enemies.push({ x: 1550, y: 340, width: 32, height: 32, velX: -2, alive: true });
-                enemies.push({ x: 2050, y: 170, width: 32, height: 32, velX: -2, alive: true });
-                enemies.push({ x: 2550, y: 340, width: 32, height: 32, velX: -2, alive: true });
+    // Atualiza HUD DOM
+    document.getElementById('speed').textContent = Math.floor(player.speed * 22);
+    document.getElementById('distance').textContent = distance.toFixed(1);
+    document.getElementById('carName').textContent = carModels[player.model].name;
 
-                collectibles.push({ x: 400, y: 100, width: 24, height: 24, collected: false });
-                collectibles.push({ x: 1200, y: 110, width: 24, height: 24, collected: false });
-                collectibles.push({ x: 1800, y: 280, width: 24, height: 24, collected: false });
-                collectibles.push({ x: 2600, y: 150, width: 24, height: 24, collected: false });
-
-                goal = { x: 3050, y: 170 };
-
-                backgroundObjects.push({ type: 'cloud', x: 150, y: 60 });
-                backgroundObjects.push({ type: 'cloud', x: 750, y: 30 });
-                backgroundObjects.push({ type: 'cloud', x: 1600, y: 80 });
-                backgroundObjects.push({ type: 'cloud', x: 2400, y: 45 });
-                backgroundObjects.push({ type: 'hill', x: 400, y: 340 });
-                backgroundObjects.push({ type: 'hill', x: 1700, y: 340 });
-                backgroundObjects.push({ type: 'bush', x: 100, y: 355 });
-                backgroundObjects.push({ type: 'bush', x: 1200, y: 355 });
-                backgroundObjects.push({ type: 'bush', x: 2300, y: 355 });
-            }
-
-            // Reset Mario
-            mario.x = 80;
-            mario.y = 300;
-            mario.velX = 0;
-            mario.velY = 0;
-            cameraX = 0;
+    // Colisão
+    for (let o of opponents) {
+        if (Math.abs(o.x - player.x) < 38 &&
+            Math.abs(o.y - player.y) < 55) {
+            gameOver();
+            return;
         }
+    }
 
-        // ============ DESENHAR FUNDO (cenário completo com parallax) ============
-        function drawBackground() {
-            // Céu gradiente
-            let sky = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-            sky.addColorStop(0, '#5C94FC');
-            sky.addColorStop(1, '#A0D8FF');
-            ctx.fillStyle = sky;
-            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    requestAnimationFrame(gameLoop);
+}
 
-            const parallaxSlow = cameraX * 0.15;
-            const parallaxMed = cameraX * 0.35;
+// ===================== GAME OVER =====================
+function gameOver() {
+    gameRunning = false;
+    document.getElementById('finalDistance').textContent = distance.toFixed(1);
+    document.getElementById('overtakes').textContent = overtakeCount;
+    document.getElementById('gameOverScreen').style.display = 'flex';
+}
 
-            // Nuvens e colinas
-            ctx.fillStyle = '#fff';
-            for (let obj of backgroundObjects) {
-                if (obj.type === 'cloud') {
-                    let cx = (obj.x - parallaxSlow) % (WIDTH + 400);
-                    if (cx < -300) cx += WIDTH + 400;
-                    ctx.globalAlpha = 0.95;
-                    ctx.beginPath();
-                    ctx.ellipse(cx, obj.y, 55, 28, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.ellipse(cx + 35, obj.y - 8, 38, 22, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.ellipse(cx - 32, obj.y - 6, 32, 24, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.globalAlpha = 1;
-                }
-                else if (obj.type === 'hill') {
-                    let hx = obj.x - parallaxMed;
-                    ctx.fillStyle = '#0B8B4A';
-                    ctx.beginPath();
-                    ctx.moveTo(hx, 380);
-                    ctx.quadraticCurveTo(hx + 110, 260, hx + 250, 380);
-                    ctx.fill();
-                    ctx.fillStyle = '#0A7A3F';
-                    ctx.beginPath();
-                    ctx.moveTo(hx + 40, 380);
-                    ctx.quadraticCurveTo(hx + 130, 290, hx + 210, 380);
-                    ctx.fill();
-                }
-                else if (obj.type === 'bush') {
-                    let bx = obj.x - cameraX * 0.7;
-                    ctx.fillStyle = '#0B8B4A';
-                    ctx.beginPath();
-                    ctx.ellipse(bx + 25, 365, 45, 22, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.ellipse(bx + 48, 355, 28, 19, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.ellipse(bx + 8, 355, 25, 18, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-            ctx.fillStyle = '#fff';
-        }
+// ===================== REINICIAR =====================
+function restartGame() {
+    opponents = [];
+    particles = [];
+    player.x = 400;
+    player.speed = 5;
+    distance = 0;
+    overtakeCount = 0;
+    roadOffset = 0;
+    gameRunning = true;
+    document.getElementById('gameOverScreen').style.display = 'none';
+    gameLoop();
+}
 
-        // ============ DESENHAR PLATAFORMAS ============
-        function drawPlatforms() {
-            for (let p of platforms) {
-                let px = p.x - cameraX;
-                if (px + p.width < 0 || px > WIDTH) continue;
+// ===================== TROCA DE CARRO =====================
+function switchCar(index) {
+    player.model = index;
+    player.maxSpeed = carModels[index].maxSpeed;
+    player.color = carModels[index].color;
+    player.accel = 0.18 + index * 0.07;
+    togglePanel(); // fecha painel automaticamente
+}
 
-                if (p.type === 'ground' || p.type === 'solid') {
-                    ctx.fillStyle = '#8B4513';
-                    ctx.fillRect(px, p.y, p.width, p.height);
-                    // Detalhes de tijolos
-                    ctx.strokeStyle = '#5E2C0C';
-                    ctx.lineWidth = 3;
-                    for (let i = 0; i < p.width; i += 28) {
-                        ctx.strokeRect(px + i, p.y + 8, 24, 18);
-                    }
-                } 
-                else if (p.type === 'question' || p.type === 'brick') {
-                    ctx.fillStyle = p.type === 'question' ? '#F4D03F' : '#E67E22';
-                    ctx.fillRect(px, p.y, p.width, p.height);
-                    ctx.strokeStyle = '#2C2C2C';
-                    ctx.lineWidth = 4;
-                    ctx.strokeRect(px + 4, p.y + 4, p.width - 8, p.height - 8);
-                    if (p.type === 'question' && p.coin) {
-                        ctx.fillStyle = '#000';
-                        ctx.font = 'bold 28px Arial';
-                        ctx.fillText('?', px + 14, p.y + 38);
-                    }
-                } 
-                else if (p.type === 'pipe') {
-                    ctx.fillStyle = '#27AE60';
-                    ctx.fillRect(px, p.y, p.width, p.height);
-                    ctx.fillStyle = '#1E8449';
-                    ctx.fillRect(px - 6, p.y - 12, p.width + 12, 18);
-                }
-            }
-        }
-
-        // ============ DESENHAR MARIO (super detalhado) ============
-        function drawMario() {
-            let mx = mario.x - cameraX;
-            let my = mario.y;
-            ctx.save();
-            if (mario.facing === -1) {
-                ctx.translate(mx + mario.width, my);
-                ctx.scale(-1, 1);
-            } else {
-                ctx.translate(mx, my);
-            }
-
-            // Chapéu
-            ctx.fillStyle = '#E74C3C';
-            ctx.fillRect(3, 3, 26, 9);
-            ctx.fillRect(0, 9, 31, 6);
-
-            // Rosto
-            ctx.fillStyle = '#F8C98A';
-            ctx.fillRect(8, 12, 18, 13);
-
-            // Olho
-            ctx.fillStyle = '#000';
-            ctx.fillRect(18, 15, 6, 6);
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(20, 16, 2, 2);
-
-            // Bigode
-            ctx.fillStyle = '#2C3E50';
-            ctx.fillRect(9, 21, 14, 3);
-
-            // Macacão azul
-            ctx.fillStyle = '#2E86C1';
-            ctx.fillRect(6, 25, 21, 15);
-
-            // Suspensórios vermelhos
-            ctx.fillStyle = '#E74C3C';
-            ctx.fillRect(9, 26, 4, 9);
-            ctx.fillRect(19, 26, 4, 9);
-
-            // Pernas
-            ctx.fillStyle = '#2C3E50';
-            ctx.fillRect(8, 37, 7, 8);
-            ctx.fillRect(18, 37, 7, 8);
-
-            // Sapatos
-            ctx.fillStyle = '#2C2C2C';
-            ctx.fillRect(5, 42, 11, 5);
-            ctx.fillRect(17, 42, 11, 5);
-
-            ctx.restore();
-        }
-
-        // ============ DESENHAR GOOMBAS ============
-        function drawEnemies() {
-            for (let e of enemies) {
-                if (!e.alive) continue;
-                let ex = e.x - cameraX;
-                // Corpo marrom
-                ctx.fillStyle = '#8B4513';
-                ctx.fillRect(ex + 2, e.y + 4, 28, 24);
-                // Barriga clara
-                ctx.fillStyle = '#A66B2E';
-                ctx.fillRect(ex + 6, e.y + 16, 20, 10);
-
-                // Olhos brancos
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(ex + 7, e.y + 8, 7, 9);
-                ctx.fillRect(ex + 19, e.y + 8, 7, 9);
-                // Pupilas
-                ctx.fillStyle = '#000';
-                ctx.fillRect(ex + 9, e.y + 10, 3, 5);
-                ctx.fillRect(ex + 21, e.y + 10, 3, 5);
-
-                // Boca
-                ctx.fillStyle = '#2C2C2C';
-                ctx.fillRect(ex + 10, e.y + 22, 13, 3);
-            }
-        }
-
-        // ============ DESENHAR MOEDAS ============
-        function drawCollectibles() {
-            for (let c of collectibles) {
-                if (c.collected) continue;
-                let cx = c.x - cameraX + 12;
-                let cy = c.y + 12;
-
-                ctx.fillStyle = '#F4D03F';
-                ctx.beginPath();
-                ctx.ellipse(cx, cy, 12, 14, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 14px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('C', cx, cy + 5);
-                ctx.textAlign = 'left';
-            }
-        }
-
-        // ============ DESENHAR META (mastro + bandeira) ============
-        function drawGoal() {
-            let gx = goal.x - cameraX;
-
-            // Mastro
-            ctx.fillStyle = '#2C3E50';
-            ctx.fillRect(gx, goal.y, 8, 200);
-
-            // Bandeira vermelha
-            ctx.fillStyle = '#E74C3C';
-            ctx.beginPath();
-            ctx.moveTo(gx + 8, goal.y + 15);
-            ctx.lineTo(gx + 55, goal.y + 28);
-            ctx.lineTo(gx + 8, goal.y + 42);
-            ctx.fill();
-
-            // Detalhe branco na bandeira
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(gx + 12, goal.y + 22, 18, 4);
-        }
-
-        // ============ HUD ============
-        function drawHUD() {
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 18px Arial';
-            ctx.fillText(`SCORE ${score.toString().padStart(6, '0')}`, 30, 35);
-            ctx.fillText(`x${coinsCollected.toString().padStart(2, '0')}`, 260, 35);
-            ctx.fillText(`WORLD ${currentLevel}-1`, 420, 35);
-            ctx.fillText(`LIVES ${lives}`, 620, 35);
-        }
-
-        // ============ ATUALIZAÇÃO ============
-        function update() {
-            if (gameState !== 'playing') return;
-
-            // Movimento horizontal
-            mario.velX *= friction;
-            if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
-                mario.velX = -mario.speed;
-                mario.facing = -1;
-            }
-            if (keys['ArrowRight'] || keys['d'] || keys['D']) {
-                mario.velX = mario.speed;
-                mario.facing = 1;
-            }
-
-            // Pulo
-            if ((keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' ']) && !mario.jumping) {
-                mario.velY = mario.jumpPower;
-                mario.jumping = true;
-            }
-
-            mario.velY += gravity;
-            mario.x += mario.velX;
-            mario.y += mario.velY;
-
-            // Colisões com plataformas
-            mario.jumping = true;
-            for (let p of platforms) {
-                if (collides(mario, p)) {
-                    // Horizontal
-                    if (mario.velX > 0) mario.x = p.x - mario.width;
-                    else if (mario.velX < 0) mario.x = p.x + p.width;
-                    mario.velX = 0;
-
-                    // Vertical
-                    if (mario.velY > 0) {
-                        mario.y = p.y - mario.height;
-                        mario.velY = 0;
-                        mario.jumping = false;
-                    } else if (mario.velY < 0) {
-                        mario.y = p.y + p.height;
-                        mario.velY = 0;
-
-                        // Bater cabeça em bloco de pergunta
-                        if (p.type === 'question' && p.coin) {
-                            p.coin = false;
-                            coinsCollected++;
-                            score += 200;
-                        }
-                    }
-                }
-            }
-
-            // Colisões com inimigos
-            for (let e of enemies) {
-                if (!e.alive) continue;
-                if (collides(mario, e)) {
-                    if (mario.velY > 2 && mario.y + mario.height - 15 < e.y + 10) {
-                        // Pulou em cima
-                        e.alive = false;
-                        mario.velY = -13;
-                        score += 400;
-                    } else {
-                        // Tocou de lado → morre
-                        die();
-                        return;
-                    }
-                }
-            }
-
-            // Coletar moedas
-            for (let c of collectibles) {
-                if (!c.collected && collides(mario, c)) {
-                    c.collected = true;
-                    coinsCollected++;
-                    score += 100;
-                }
-            }
-
-            // Movimento dos Goombas
-            for (let e of enemies) {
-                if (!e.alive) continue;
-                e.x += e.velX;
-
-                // Inverter direção ao bater em parede/plataforma
-                for (let p of platforms) {
-                    if (collides({ x: e.x, y: e.y, width: e.width, height: e.height }, p)) {
-                        e.velX = -e.velX;
-                        break;
-                    }
-                }
-            }
-
-            // Câmera (segue Mario)
-            cameraX = Math.max(0, mario.x - 220);
-
-            // Chegar na meta
-            if (mario.x > goal.x - 30) {
-                gameState = 'won';
-            }
-
-            // Caiu no abismo
-            if (mario.y > HEIGHT + 100) {
-                die();
-            }
-        }
-
-        function die() {
-            lives--;
-            if (lives <= 0) {
-                gameState = 'gameover';
-            } else {
-                loadLevel(currentLevel);
-            }
-        }
-
-        // ============ DESENHO PRINCIPAL ============
-        function draw() {
-            ctx.clearRect(0, 0, WIDTH, HEIGHT);
-            drawBackground();
-            drawPlatforms();
-            drawCollectibles();
-            drawEnemies();
-            drawMario();
-            drawGoal();
-            drawHUD();
-
-            if (gameState === 'won') {
-                ctx.fillStyle = 'rgba(0,0,0,0.75)';
-                ctx.fillRect(0, 0, WIDTH, HEIGHT);
-                ctx.fillStyle = '#FFD700';
-                ctx.font = 'bold 38px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('NÍVEL COMPLETO!', WIDTH / 2, HEIGHT / 2 - 30);
-                ctx.font = '20px Arial';
-                ctx.fillStyle = '#fff';
-                ctx.fillText('PRESSIONE "R" PARA O PRÓXIMO NÍVEL', WIDTH / 2, HEIGHT / 2 + 40);
-            }
-
-            if (gameState === 'gameover') {
-                ctx.fillStyle = 'rgba(0,0,0,0.8)';
-                ctx.fillRect(0, 0, WIDTH, HEIGHT);
-                ctx.fillStyle = '#E74C3C';
-                ctx.font = 'bold 48px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('GAME OVER', WIDTH / 2, HEIGHT / 2 - 20);
-                ctx.fillStyle = '#fff';
-                ctx.font = '20px Arial';
-                ctx.fillText('PRESSIONE "R" PARA REINICIAR', WIDTH / 2, HEIGHT / 2 + 50);
-            }
-        }
-
-        // ============ LOOP DO JOGO ============
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // ============ CONTROLES ============
-        window.addEventListener('keydown', e => {
-            keys[e.key] = true;
-            if (e.key === ' ' || e.key === 'Spacebar') e.preventDefault();
-
-            if ((gameState === 'won' || gameState === 'gameover') && e.key.toLowerCase() === 'r') {
-                if (gameState === 'won') {
-                    if (currentLevel < 2) {
-                        loadLevel(currentLevel + 1);
-                        gameState = 'playing';
-                        score += 1000; // bônus de fase
-                    } else {
-                        alert('🏆 PARABÉNS! Você completou todos os níveis!\n\nObrigado por jogar essa versão HTML5 detalhada.');
-                        loadLevel(1);
-                        gameState = 'playing';
-                        lives = 3;
-                        score = 0;
-                        coinsCollected = 0;
-                    }
-                } else {
-                    lives = 3;
-                    score = 0;
-                    coinsCollected = 0;
-                    loadLevel(1);
-                    gameState = 'playing';
-                }
-            }
-        });
-
-        window.addEventListener('keyup', e => {
-            keys[e.key] = false;
-        });
-
-        // ============ INICIAR ============
-        loadLevel(1);
-        gameLoop();
-    </script>
-</body>
-</html>rht
+function togglePanel() {
+    const panel = document.getElementById('carPanel');
+    panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+    
+   
