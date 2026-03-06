@@ -3,441 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏎️ CORRIDA INFINITA PIXEL ULTRA - R$1 ou R$10</title>
+    <title>Street Fighter Simples em HTML5</title>
     <style>
         body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             margin: 0;
-            padding: 0;
-            background: #000;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            text-align: center;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 400px;
+            background-image: url('https://via.placeholder.com/800x400?text=Street+Fighter+Arena'); /* Substitua por uma imagem de arena real */
+            background-size: cover;
+            border: 2px solid #fff;
             overflow: hidden;
         }
-        canvas {
-            border: 4px solid #0f0;
-            image-rendering: pixelated;
-            box-shadow: 0 0 30px #0f0;
+        .character {
+            position: absolute;
+            width: 100px;
+            height: 150px;
+            background-size: contain;
+            background-repeat: no-repeat;
         }
-        #hud {
+        #player1 {
+            left: 100px;
+            bottom: 0;
+            background-image: url('https://via.placeholder.com/100x150?text=Ryu'); /* Substitua por sprite de Ryu */
+            transform: scaleX(1); /* Para virar para a direita */
+        }
+        #player2 {
+            right: 100px;
+            bottom: 0;
+            background-image: url('https://via.placeholder.com/100x150?text=Ken'); /* Substitua por sprite de Ken */
+            transform: scaleX(-1); /* Virado para a esquerda */
+        }
+        .health-bar {
             position: absolute;
             top: 10px;
+            width: 300px;
+            height: 20px;
+            background-color: red;
+            border: 2px solid #fff;
+        }
+        #health1 {
             left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border: 3px solid #0f0;
-            font-size: 18px;
-            pointer-events: none;
         }
-        #carPanel {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 30, 0, 0.95);
-            border: 5px solid #0f0;
-            padding: 20px;
-            width: 620px;
-            display: none;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
-            box-shadow: 0 0 40px #0f0;
+        #health2 {
+            right: 10px;
         }
-        .carOption {
-            width: 180px;
-            padding: 10px;
-            border: 3px solid #0f0;
-            background: #001100;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .carOption:hover {
-            background: #003300;
-            transform: scale(1.08);
-            box-shadow: 0 0 20px #0f0;
-        }
-        .carPreview {
+        .health-fill {
+            height: 100%;
+            background-color: green;
             width: 100%;
-            height: 80px;
-            background: #111;
-            margin-bottom: 8px;
-            border: 2px solid #0f0;
         }
-        button {
-            background: #0f0;
-            color: #000;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        #gameOverScreen {
+        #message {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
-            border: 6px solid #f00;
-            padding: 40px;
+            font-size: 48px;
             display: none;
-            flex-direction: column;
-            align-items: center;
+        }
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-
-<canvas id="game" width="800" height="600"></canvas>
-
-<div id="hud">
-    <div>🚗 CARRO: <span id="carName">FIAT MOBI R$1,00</span></div>
-    <div>💨 VELOCIDADE: <span id="speed">0</span> km/h</div>
-    <div>📏 DISTÂNCIA: <span id="distance">0</span> km</div>
-    <div style="font-size:14px; margin-top:8px;">W = Acelerar S = Frear A/D = Esquerda/Direita C = Trocar Carro</div>
-</div>
-
-<div id="carPanel">
-    <h2 style="width:100%; color:#0f0; margin:0 0 15px 0;">ESCOLHA SEU CARRO (ultra detalhado)</h2>
-    
-    <div class="carOption" onclick="switchCar(0)">
-        <div class="carPreview" id="preview0"></div>
-        <strong>FIAT MOBI R$1,00</strong><br>
-        <small>Velocidade máxima: 180 km/h • Barato e raiz</small>
-    </div>
-    
-    <div class="carOption" onclick="switchCar(1)">
-        <div class="carPreview" id="preview1"></div>
-        <strong>CARRO DE R$10,00</strong><br>
-        <small>Velocidade máxima: 240 km/h • Mais potente</small>
-    </div>
-    
-    <div class="carOption" onclick="switchCar(2)">
-        <div class="carPreview" id="preview2"></div>
-        <strong>TURBO ESPECIAL 2026</strong><br>
-        <small>Velocidade máxima: 320 km/h • O mais rápido</small>
+    <div id="game-container">
+        <div id="player1" class="character"></div>
+        <div id="player2" class="character"></div>
+        <div id="health1" class="health-bar"><div class="health-fill" id="health-fill1"></div></div>
+        <div id="health2" class="health-bar"><div class="health-fill" id="health-fill2"></div></div>
+        <div id="message">Jogador 1 Venceu!</div>
+        <div id="controls">
+            <p>Controles Jogador 1 (Ryu): A/D - Mover, W - Pular, S - Agachar, J - Soco, K - Chute, L - Hadouken</p>
+            <p>Controles Jogador 2 (Ken): ←/→ - Mover, ↑ - Pular, ↓ - Agachar, Num1 - Soco, Num2 - Chute, Num3 - Shoryuken</p>
+        </div>
     </div>
 
-    <button onclick="togglePanel()">FECHAR PAINEL</button>
-</div>
+    <script>
+        // Configurações do jogo
+        const GAME_WIDTH = 800;
+        const GAME_HEIGHT = 400;
+        const GRAVITY = 0.5;
+        const JUMP_HEIGHT = 12;
+        const MOVE_SPEED = 5;
+        const ATTACK_DAMAGE = 10;
+        const SPECIAL_DAMAGE = 20;
 
-<div id="gameOverScreen">
-    <h1 style="color:#f00; margin:0;">💥 GAME OVER!</h1>
-    <p style="font-size:24px; margin:15px 0;">Distância percorrida: <span id="finalDistance">0</span> km</p>
-    <p style="color:#0f0;">Você ultrapassou <span id="overtakes">0</span> adversários!</p>
-    <button onclick="restartGame()">REINICIAR (R)</button>
-</div>
+        // Estados dos jogadores
+        let player1 = {
+            x: 100,
+            y: GAME_HEIGHT - 150,
+            vx: 0,
+            vy: 0,
+            health: 100,
+            facingRight: true,
+            isJumping: false,
+            isCrouching: false,
+            isAttacking: false,
+            isSpecial: false
+        };
 
-<script>
-// ===============================================
-// JOGO DE CORRIDA INFINITA PIXEL ULTRA DETALHADO
-// Controles: W A S D
-// Infinito + adversários + ultrapassagem livre
-// Painel para trocar de carro (C)
-// Estilo PIXEL ART com desenho super detalhado
-// ===============================================
+        let player2 = {
+            x: GAME_WIDTH - 200,
+            y: GAME_HEIGHT - 150,
+            vx: 0,
+            vy: 0,
+            health: 100,
+            facingRight: false,
+            isJumping: false,
+            isCrouching: false,
+            isAttacking: false,
+            isSpecial: false
+        };
 
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-ctx.imageSmoothingEnabled = false; // PIXEL ART PURA
+        // Elementos DOM
+        const p1Elem = document.getElementById('player1');
+        const p2Elem = document.getElementById('player2');
+        const healthFill1 = document.getElementById('health-fill1');
+        const healthFill2 = document.getElementById('health-fill2');
+        const message = document.getElementById('message');
 
-// ===================== VARIÁVEIS DO JOGO =====================
-let player = {
-    x: 400,
-    y: 460,
-    speed: 0,
-    maxSpeed: 9,
-    accel: 0.22,
-    color: '#f0f0f0',
-    model: 0,
-    width: 48,
-    height: 78
-};
+        // Teclas pressionadas
+        const keys = {};
 
-const carModels = [
-    { name: "FIAT MOBI R$1,00", color: "#f0f0f0", maxSpeed: 9, wheelColor: "#222" },
-    { name: "CARRO DE R$10,00", color: "#00cc00", maxSpeed: 12, wheelColor: "#111" },
-    { name: "TURBO ESPECIAL", color: "#ff2200", maxSpeed: 15, wheelColor: "#ffff00" }
-];
+        // Event listeners para teclas
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === 'l' && !player1.isSpecial) player1.isSpecial = true;
+            if (e.key === '3' && !player2.isSpecial) player2.isSpecial = true;
+        });
 
-let opponents = [];
-let particles = [];           // partículas de escapamento
-let roadOffset = 0;
-let distance = 0;
-let overtakeCount = 0;
-let keys = {};
-let gameRunning = true;
-let lastTime = Date.now();
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+            if (e.key === 'j' || e.key === 'k') player1.isAttacking = false;
+            if (e.key === '1' || e.key === '2') player2.isAttacking = false;
+        });
 
-// ===================== FUNÇÃO DE DESENHO DO CARRO PIXEL ART (ULTRA DETALHADA) =====================
-function drawCar(x, y, color, wheelColor, isPlayer = false, scale = 1) {
-    ctx.save();
-    ctx.translate(x, y);
-    if (!isPlayer) ctx.scale(scale, scale); // adversários menores quando longe
+        // Função de atualização do jogo
+        function update() {
+            // Movimentação Jogador 1
+            player1.vx = 0;
+            player1.isCrouching = false;
+            if (keys['a'] && player1.x > 0) player1.vx = -MOVE_SPEED;
+            if (keys['d'] && player1.x < GAME_WIDTH - 100) player1.vx = MOVE_SPEED;
+            if (keys['w'] && !player1.isJumping) {
+                player1.vy = -JUMP_HEIGHT;
+                player1.isJumping = true;
+            }
+            if (keys['s']) player1.isCrouching = true;
+            if (keys['j'] || keys['k']) player1.isAttacking = true;
 
-    // Sombra
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(-22, 38, 44, 12);
+            // Movimentação Jogador 2
+            player2.vx = 0;
+            player2.isCrouching = false;
+            if (keys['ArrowLeft'] && player2.x > 0) player2.vx = -MOVE_SPEED;
+            if (keys['ArrowRight'] && player2.x < GAME_WIDTH - 100) player2.vx = MOVE_SPEED;
+            if (keys['ArrowUp'] && !player2.isJumping) {
+                player2.vy = -JUMP_HEIGHT;
+                player2.isJumping = true;
+            }
+            if (keys['ArrowDown']) player2.isCrouching = true;
+            if (keys['1'] || keys['2']) player2.isAttacking = true;
 
-    // Corpo principal
-    ctx.fillStyle = color;
-    ctx.fillRect(-22, -32, 44, 58);           // carroceria
+            // Aplicar gravidade e atualizar posições
+            player1.vy += GRAVITY;
+            player1.x += player1.vx;
+            player1.y += player1.vy;
+            if (player1.y >= GAME_HEIGHT - 150) {
+                player1.y = GAME_HEIGHT - 150;
+                player1.vy = 0;
+                player1.isJumping = false;
+            }
 
-    // Teto / cabine
-    ctx.fillStyle = '#111111';
-    ctx.fillRect(-16, -26, 32, 24);
+            player2.vy += GRAVITY;
+            player2.x += player2.vx;
+            player2.y += player2.vy;
+            if (player2.y >= GAME_HEIGHT - 150) {
+                player2.y = GAME_HEIGHT - 150;
+                player2.vy = 0;
+                player2.isJumping = false;
+            }
 
-    // Janelas (brilho)
-    ctx.fillStyle = '#88ccff';
-    ctx.fillRect(-13, -23, 10, 16);
-    ctx.fillRect(3, -23, 10, 16);
+            // Direção dos personagens
+            if (player1.x < player2.x) {
+                player1.facingRight = true;
+                p1Elem.style.transform = 'scaleX(1)';
+                player2.facingRight = false;
+                p2Elem.style.transform = 'scaleX(-1)';
+            } else {
+                player1.facingRight = false;
+                p1Elem.style.transform = 'scaleX(-1)';
+                player2.facingRight = true;
+                p2Elem.style.transform = 'scaleX(1)';
+            }
 
-    // Faróis dianteiros
-    ctx.fillStyle = '#ffff88';
-    ctx.fillRect(-18, -34, 6, 8);
-    ctx.fillRect(12, -34, 6, 8);
+            // Detecção de colisão e ataques
+            const distance = Math.abs(player1.x - player2.x);
+            if (distance < 100) { // Distância para ataque
+                if (player1.isAttacking && !player1.isSpecial) {
+                    player2.health -= ATTACK_DAMAGE;
+                    player1.isAttacking = false;
+                }
+                if (player2.isAttacking && !player2.isSpecial) {
+                    player1.health -= ATTACK_DAMAGE;
+                    player2.isAttacking = false;
+                }
+                if (player1.isSpecial) {
+                    player2.health -= SPECIAL_DAMAGE;
+                    player1.isSpecial = false;
+                    // Animação simples de Hadouken (pode adicionar elemento temporário)
+                }
+                if (player2.isSpecial) {
+                    player1.health -= SPECIAL_DAMAGE;
+                    player2.isSpecial = false;
+                    // Animação simples de Shoryuken
+                }
+            }
 
-    // Lanternas traseiras
-    ctx.fillStyle = '#ff0000';
-    ctx.fillRect(-18, 18, 6, 6);
-    ctx.fillRect(12, 18, 6, 6);
+            // Atualizar barras de vida
+            healthFill1.style.width = `${player1.health}%`;
+            healthFill2.style.width = `${player2.health}%`;
 
-    // Detalhes laterais (linhas pixel)
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(-22, -32, 44, 58);
+            // Verificar vitória
+            if (player1.health <= 0) {
+                message.textContent = 'Jogador 2 (Ken) Venceu!';
+                message.style.display = 'block';
+                return; // Para o jogo
+            }
+            if (player2.health <= 0) {
+                message.textContent = 'Jogador 1 (Ryu) Venceu!';
+                message.style.display = 'block';
+                return; // Para o jogo
+            }
 
-    // Rodas (ultra detalhadas)
-    ctx.fillStyle = wheelColor;
-    ctx.fillRect(-26, -22, 8, 18);   // roda esquerda
-    ctx.fillRect(18, -22, 8, 18);    // roda direita
-    ctx.fillRect(-26, 12, 8, 18);    // roda esquerda traseira
-    ctx.fillRect(18, 12, 8, 18);     // roda direita traseira
+            // Atualizar posições nos elementos
+            p1Elem.style.left = `${player1.x}px`;
+            p1Elem.style.bottom = `${GAME_HEIGHT - player1.y - 150}px`; // Ajuste para pular
+            p2Elem.style.left = `${player2.x}px`;
+            p2Elem.style.bottom = `${GAME_HEIGHT - player2.y - 150}px`;
 
-    // Aro das rodas (detalhe pixel)
-    ctx.fillStyle = '#ddd';
-    ctx.fillRect(-24, -18, 4, 10);
-    ctx.fillRect(20, -18, 4, 10);
-    ctx.fillRect(-24, 16, 4, 10);
-    ctx.fillRect(20, 16, 4, 10);
+            // Animações básicas (mude background para sprites animados em produção)
+            if (player1.isAttacking) p1Elem.style.backgroundColor = 'yellow'; else p1Elem.style.backgroundColor = '';
+            if (player2.isAttacking) p2Elem.style.backgroundColor = 'yellow'; else p2Elem.style.backgroundColor = '';
 
-    // Faixa de corrida no capô
-    ctx.fillStyle = '#ffff00';
-    ctx.fillRect(-8, -30, 4, 12);
-
-    ctx.restore();
-}
-
-// ===================== FUNÇÃO DE DESENHO DA ESTRADA =====================
-function drawRoad() {
-    // Grama lateral
-    ctx.fillStyle = '#003300';
-    ctx.fillRect(0, 0, 800, 600);
-
-    // Estrada
-    ctx.fillStyle = '#222222';
-    ctx.fillRect(80, 0, 640, 600);
-
-    // Faixas laterais
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(78, 0, 6, 600);
-    ctx.fillRect(716, 0, 6, 600);
-
-    // Linhas centrais (movimentando)
-    ctx.strokeStyle = '#ffff00';
-    ctx.lineWidth = 8;
-    for (let i = -2; i < 12; i++) {
-        let y = (i * 70 + roadOffset) % 840 - 120;
-        ctx.beginPath();
-        ctx.moveTo(240, y);
-        ctx.lineTo(240, y + 45);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(400, y);
-        ctx.lineTo(400, y + 45);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(560, y);
-        ctx.lineTo(560, y + 45);
-        ctx.stroke();
-    }
-
-    // Efeito de asfalto (linhas finas)
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 30; i++) {
-        let y = (i * 25 + roadOffset * 1.3) % 650 - 50;
-        ctx.beginPath();
-        ctx.moveTo(100, y);
-        ctx.lineTo(700, y);
-        ctx.stroke();
-    }
-}
-
-// ===================== PARTICULAS DE ESCAPAMENTO =====================
-function createParticle() {
-    particles.push({
-        x: player.x - 18 + Math.random() * 36,
-        y: player.y + 35,
-        life: 25,
-        vy: 3 + Math.random() * 2
-    });
-}
-
-// ===================== SPAWN DE ADVERSÁRIOS =====================
-function spawnOpponent() {
-    if (opponents.length > 9) return;
-    
-    const laneX = [170, 320, 470, 620][Math.floor(Math.random() * 4)];
-    
-    opponents.push({
-        x: laneX + (Math.random() * 40 - 20),
-        y: -80 - Math.random() * 300,
-        speed: 3.5 + Math.random() * 5,
-        color: ['#ff8800', '#0088ff', '#ff00aa', '#aa8800'][Math.floor(Math.random() * 4)],
-        width: 48,
-        height: 78,
-        overtaken: false
-    });
-}
-
-// ===================== LOOP PRINCIPAL =====================
-function gameLoop() {
-    if (!gameRunning) return;
-
-    const now = Date.now();
-    const delta = now - lastTime;
-    lastTime = now;
-
-    // === ATUALIZAÇÃO ===
-    if (keys['w'] || keys['W']) {
-        player.speed = Math.min(player.speed + player.accel, carModels[player.model].maxSpeed);
-        if (Math.random() < 0.6) createParticle();
-    }
-    if (keys['s'] || keys['S']) {
-        player.speed = Math.max(player.speed - 0.45, 0);
-    }
-    if (keys['a'] || keys['A']) player.x -= 7.5;
-    if (keys['d'] || keys['D']) player.x += 7.5;
-
-    // Limites da pista
-    player.x = Math.max(110, Math.min(690, player.x));
-
-    // Velocidade mínima para sensação de movimento
-    if (player.speed < 1) player.speed = 1;
-
-    // Movimento dos adversários
-    for (let i = opponents.length - 1; i >= 0; i--) {
-        let o = opponents[i];
-        o.y += o.speed - player.speed * 0.7;   // relatividade = ultrapassagem!
-
-        // Ultrapassagem detectada
-        if (!o.overtaken && o.y > player.y - 30 && Math.abs(o.x - player.x) < 40) {
-            o.overtaken = true;
-            overtakeCount++;
+            requestAnimationFrame(update);
         }
 
-        // Remove quando sai da tela
-        if (o.y > 700) opponents.splice(i, 1);
-    }
-
-    // Scroll da estrada
-    roadOffset = (roadOffset + player.speed * 4) % 140;
-
-    distance += player.speed * 0.08;
-
-    // Spawn aleatório de adversários
-    if (Math.random() < 0.035) spawnOpponent();
-
-    // Atualiza partículas
-    for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].y += particles[i].vy;
-        particles[i].life--;
-        if (particles[i].life <= 0) particles.splice(i, 1);
-    }
-
-    // === RENDERIZAÇÃO ===
-    ctx.clearRect(0, 0, 800, 600);
-
-    drawRoad();
-
-    // Desenha adversários (ordem por Y para profundidade)
-    opponents.sort((a, b) => a.y - b.y);
-    opponents.forEach(o => {
-        const scale = Math.max(0.6, 1 - (o.y / 900));
-        drawCar(o.x, o.y, o.color, '#222', false, scale);
-    });
-
-    // Partículas de escapamento
-    ctx.fillStyle = '#ffaa00';
-    particles.forEach(p => {
-        ctx.globalAlpha = p.life / 25;
-        ctx.fillRect(p.x - 3, p.y, 6, 8);
-    });
-    ctx.globalAlpha = 1;
-
-    // Desenha jogador (sempre por cima)
-    drawCar(player.x, player.y, carModels[player.model].color, carModels[player.model].wheelColor, true);
-
-    // HUD no canvas (velocidade)
-    ctx.fillStyle = '#0f0';
-    ctx.font = '22px Courier New';
-    ctx.textAlign = 'right';
-    ctx.fillText(Math.floor(player.speed * 22) + ' km/h', 760, 40);
-
-    // Atualiza HUD DOM
-    document.getElementById('speed').textContent = Math.floor(player.speed * 22);
-    document.getElementById('distance').textContent = distance.toFixed(1);
-    document.getElementById('carName').textContent = carModels[player.model].name;
-
-    // Colisão
-    for (let o of opponents) {
-        if (Math.abs(o.x - player.x) < 38 &&
-            Math.abs(o.y - player.y) < 55) {
-            gameOver();
-            return;
-        }
-    }
-
-    requestAnimationFrame(gameLoop);
-}
-
-// ===================== GAME OVER =====================
-function gameOver() {
-    gameRunning = false;
-    document.getElementById('finalDistance').textContent = distance.toFixed(1);
-    document.getElementById('overtakes').textContent = overtakeCount;
-    document.getElementById('gameOverScreen').style.display = 'flex';
-}
-
-// ===================== REINICIAR =====================
-function restartGame() {
-    opponents = [];
-    particles = [];
-    player.x = 400;
-    player.speed = 5;
-    distance = 0;
-    overtakeCount = 0;
-    roadOffset = 0;
-    gameRunning = true;
-    document.getElementById('gameOverScreen').style.display = 'none';
-    gameLoop();
-}
-
-// ===================== TROCA DE CARRO =====================
-function switchCar(index) {
-    player.model = index;
-    player.maxSpeed = carModels[index].maxSpeed;
-    player.color = carModels[index].color;
-    player.accel = 0.18 + index * 0.07;
-    togglePanel(); // fecha painel automaticamente
-}
-
-function togglePanel() {
-    const panel = document.getElementById('carPanel');
-    panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
-    
-   
+        // Iniciar o jogo
+        update();
+    </script>
+</body>
+</html>
