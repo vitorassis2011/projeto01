@@ -1,386 +1,115 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zumbi Shooter - Mata Zumbis!</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #111;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: Arial, sans-serif;
-        }
-        canvas {
-            border: 2px solid #333;
-            background: #222;
-            box-shadow: 0 0 20px rgba(0,255,0,0.5);
-        }
-        #instructions {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            font-size: 14px;
-            background: rgba(0,0,0,0.7);
-            padding: 10px;
-            border-radius: 5px;
-            max-width: 300px;
-        }
-    </style>
-</head>
-<body>
-    <canvas id="game" width="800" height="600"></canvas>
-    <div id="instructions">
-        <strong>Controles:</strong><br>
-        A/D ou Setas ← →: Mover<br>
-        ESPAÇO: Atirar (segure para fogo automático)<br>
-        1-4: Trocar arma (Pistola, Escopeta, Rifle, Lança-foguetes)<br>
-        R: Reiniciar (após Game Over)
-    </div>
-    <script>
-        const canvas = document.getElementById('game');
-        const ctx = canvas.getContext('2d');
+import sqlite3
+from datetime import datetime
 
-        const weapons = [
-            {
-                name: 'Pistola',
-                dmg: 25,
-                fireRate: 300,
-                bulletSpeed: 10,
-                spread: 1,
-                pellets: 1,
-                color: 'yellow',
-                size: 3
-            },
-            {
-                name: 'Escopeta',
-                dmg: 18,
-                fireRate: 700,
-                bulletSpeed: 7,
-                spread: 8,
-                pellets: 5,
-                color: 'orange',
-                size: 2
-            },
-            {
-                name: 'Rifle',
-                dmg: 12,
-                fireRate: 90,
-                bulletSpeed: 14,
-                spread: 0.5,
-                pellets: 1,
-                color: 'cyan',
-                size: 2
-            },
-            {
-                name: 'Lança-foguetes',
-                dmg: 60,
-                fireRate: 1500,
-                bulletSpeed: 5,
-                spread: 0,
-                pellets: 1,
-                color: 'red',
-                size: 7
-            }
-        ];
+# Conexão com o banco de dados SQLite
+def conectar_db():
+    conn = sqlite3.connect('monitoramento.db')
+    return conn
 
-        let gameState = {
-            score: 0,
-            lives: 3,
-            wave: 1,
-            nextBossScore: 500,
-            over: false
-        };
+# Criação das tabelas no banco de dados
+def criar_tabelas():
+    conn = conectar_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS empresas (
+            id INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL,
+            cnpj TEXT NOT NULL UNIQUE,
+            data_criacao TEXT,
+            status TEXT
+        );
+    ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS monitoramento (
+            id INTEGER PRIMARY KEY,
+            empresa_id INTEGER,
+            data_monitora TEXT,
+            status_monitoramento TEXT,
+            FOREIGN KEY (empresa_id) REFERENCES empresas(id)
+        );
+    ''')
+    
+    conn.commit()
+    conn.close()
 
-        let player = {
-            x: 380,
-            y: 550,
-            w: 40,
-            h: 40,
-            speed: 6,
-            health: 100,
-            maxHealth: 100,
-            weapon: 0,
-            lastFire: 0
-        };
+# Função para cadastrar uma nova empresa
+def cadastrar_empresa(nome, cnpj):
+    conn = conectar_db()
+    cursor = conn.cursor()
+    
+    data_criacao = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    status = 'Ativa'  # Status inicial da empresa
+    
+    cursor.execute('''
+        INSERT INTO empresas (nome, cnpj, data_criacao, status) 
+        VALUES (?, ?, ?, ?)
+    ''', (nome, cnpj, data_criacao, status))
+    
+    conn.commit()
+    conn.close()
 
-        let zombies = [];
-        let bullets = [];
-        let bossBullets = [];
-        let boss = null;
-        let lastSpawn = Date.now();
-        let spawnInterval = 1000;
-        let keys = {};
+# Função para monitorar o status de uma empresa
+def monitorar_empresa(empresa_id, status_monitoramento):
+    conn = conectar_db()
+    cursor = conn.cursor()
+    
+    data_monitoramento = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    # Registra o monitoramento
+    cursor.execute('''
+        INSERT INTO monitoramento (empresa_id, data_monitora, status_monitoramento) 
+        VALUES (?, ?, ?)
+    ''', (empresa_id, data_monitoramento, status_monitoramento))
+    
+    # Atualiza o status da empresa no banco de dados
+    cursor.execute('''
+        UPDATE empresas 
+        SET status = ? 
+        WHERE id = ?
+    ''', (status_monitoramento, empresa_id))
+    
+    conn.commit()
+    conn.close()
 
-        function collide(r1, r2) {
-            return r1.x < r2.x + r2.w &&
-                   r1.x + r1.w > r2.x &&
-                   r1.y < r2.y + r2.h &&
-                   r1.y + r1.h > r2.y;
-        }
+# Função para gerar relatório de monitoramento
+def gerar_relatorio():
+    conn = conectar_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT empresas.nome, empresas.status, monitoramento.data_monitora, monitoramento.status_monitoramento 
+        FROM empresas
+        LEFT JOIN monitoramento ON empresas.id = monitoramento.empresa_id
+        ORDER BY monitoramento.data_monitora DESC;
+    ''')
+    
+    relatorio = cursor.fetchall()
+    
+    print("Relatório de Monitoramento de Empresas:")
+    print("Nome da Empresa | Status Atual | Data Monitoramento | Status do Monitoramento")
+    print("-" * 80)
+    for row in relatorio:
+        print(f"{row[0]} | {row[1]} | {row[2]} | {row[3]}")
+    
+    conn.close()
 
-        function shoot() {
-            const weap = weapons[player.weapon];
-            const now = Date.now();
-            if (now - player.lastFire < weap.fireRate) return;
-            player.lastFire = now;
-            for (let p = 0; p < weap.pellets; p++) {
-                bullets.push({
-                    x: player.x + player.w / 2 + (Math.random() - 0.5) * 20,
-                    y: player.y,
-                    vx: (Math.random() - 0.5) * weap.spread,
-                    vy: -weap.bulletSpeed,
-                    dmg: weap.dmg,
-                    color: weap.color,
-                    size: weap.size
-                });
-            }
-        }
+# Função principal
+def main():
+    criar_tabelas()
+    
+    # Cadastrando algumas empresas para testes
+    cadastrar_empresa('Tech Solutions Ltda', '12.345.678/0001-99')
+    cadastrar_empresa('InovaCorp', '98.765.432/0001-00')
+    
+    # Monitorando o status das empresas
+    monitorar_empresa(1, 'Em Manutenção')  # Empresa 1 em manutenção
+    monitorar_empresa(2, 'Ativa')  # Empresa 2 está ativa
+    
+    # Gerando relatório
+    gerar_relatorio()
 
-        function spawnBoss() {
-            boss = {
-                x: 325,
-                y: -200,
-                w: 150,
-                h: 150,
-                maxHealth: 300 + gameState.wave * 100,
-                health: 300 + gameState.wave * 100,
-                speed: 1,
-                lastShoot: 0,
-                oscillate: 0
-            };
-        }
+if __name__ == '__main__':
+    main()
 
-        function update() {
-            if (gameState.over) return;
-
-            const now = Date.now();
-
-            // Movimento do player
-            if (keys['a'] || keys['arrowleft']) {
-                player.x = Math.max(0, player.x - player.speed);
-            }
-            if (keys['d'] || keys['arrowright']) {
-                player.x = Math.min(800 - player.w, player.x + player.speed);
-            }
-
-            // Tiro
-            if (keys[' ']) {
-                shoot();
-            }
-
-            // Spawn zumbis (2-5 por segundo)
-            if (now - lastSpawn >= spawnInterval) {
-                const numZ = 2 + Math.floor(Math.random() * 4); // 2 a 5
-                for (let k = 0; k < numZ; k++) {
-                    zombies.push({
-                        x: Math.random() * (800 - 60),
-                        y: -60 - Math.random() * 40,
-                        w: 50,
-                        h: 50,
-                        health: 40 + gameState.wave * 15,
-                        maxHealth: 40 + gameState.wave * 15,
-                        speed: 1.2 + gameState.wave * 0.15,
-                        color: `hsl(${100 + Math.random() * 40}, 60%, 30%)`
-                    });
-                }
-                lastSpawn = now;
-            }
-
-            // Spawn chefe
-            if (!boss && gameState.score >= gameState.nextBossScore) {
-                spawnBoss();
-            }
-
-            // Update balas do player
-            for (let i = bullets.length - 1; i >= 0; i--) {
-                const b = bullets[i];
-                b.x += b.vx;
-                b.y += b.vy;
-                if (b.x < 0 || b.x > 800 || b.y < 0 || b.y > 600) {
-                    bullets.splice(i, 1);
-                    continue;
-                }
-                // Hit zumbis
-                for (let j = zombies.length - 1; j >= 0; j--) {
-                    const z = zombies[j];
-                    if (collide(b, z)) {
-                        z.health -= b.dmg;
-                        bullets.splice(i, 1);
-                        if (z.health <= 0) {
-                            zombies.splice(j, 1);
-                            gameState.score += 10;
-                        }
-                        break;
-                    }
-                }
-                // Hit chefe
-                if (boss && collide(b, boss)) {
-                    boss.health -= b.dmg;
-                    bullets.splice(i, 1);
-                    if (boss.health <= 0) {
-                        gameState.score += 500;
-                        gameState.nextBossScore += 500;
-                        gameState.wave++;
-                        spawnInterval = Math.max(150, spawnInterval * 0.92);
-                        boss = null;
-                    }
-                }
-            }
-
-            // Update balas do chefe
-            for (let i = bossBullets.length - 1; i >= 0; i--) {
-                const bb = bossBullets[i];
-                bb.x += bb.vx;
-                bb.y += bb.vy;
-                if (bb.x < 0 || bb.x > 800 || bb.y < 0 || bb.y > 600) {
-                    bossBullets.splice(i, 1);
-                    continue;
-                }
-                if (collide(bb, player)) {
-                    player.health -= bb.dmg;
-                    bossBullets.splice(i, 1);
-                    if (player.health <= 0) {
-                        gameState.lives--;
-                        player.health = player.maxHealth;
-                        player.x = 380;
-                        player.y = 550;
-                        if (gameState.lives <= 0) {
-                            gameState.over = true;
-                        }
-                    }
-                    continue;
-                }
-            }
-
-            // Update zumbis
-            for (let i = zombies.length - 1; i >= 0; i--) {
-                const z = zombies[i];
-                z.y += z.speed;
-                if (z.y > 600) {
-                    zombies.splice(i, 1);
-                    continue;
-                }
-                if (collide(z, player)) {
-                    player.health -= 25;
-                    zombies.splice(i, 1);
-                    if (player.health <= 0) {
-                        gameState.lives--;
-                        player.health = player.maxHealth;
-                        player.x = 380;
-                        player.y = 550;
-                        if (gameState.lives <= 0) {
-                            gameState.over = true;
-                        }
-                    }
-                }
-            }
-
-            // Update chefe
-            if (boss) {
-                boss.y += boss.speed;
-                if (boss.y > 200) {
-                    boss.speed = 0;
-                    boss.oscillate += 0.03;
-                    boss.x += Math.sin(boss.oscillate) * 3;
-                    boss.x = Math.max(25, Math.min(800 - boss.w - 25, boss.x));
-                }
-                // Chefe atira
-                if (now - boss.lastShoot >= 2000 - gameState.wave * 30) {
-                    const dx = player.x + player.w / 2 - (boss.x + boss.w / 2);
-                    const dy = player.y + player.h / 2 - (boss.y + boss.h / 2);
-                    const dist = Math.hypot(dx, dy) || 1;
-                    const bspeed = 4 + gameState.wave * 0.3;
-                    bossBullets.push({
-                        x: boss.x + boss.w / 2,
-                        y: boss.y + boss.h / 2,
-                        vx: (dx / dist) * bspeed,
-                        vy: (dy / dist) * bspeed,
-                        dmg: 20 + gameState.wave * 3,
-                        color: 'darkred',
-                        size: 6
-                    });
-                    boss.lastShoot = now;
-                }
-            }
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, 800, 600);
-
-            // Player
-            ctx.fillStyle = 'cyan';
-            ctx.shadowColor = 'cyan';
-            ctx.shadowBlur = 10;
-            ctx.fillRect(player.x, player.y, player.w, player.h);
-            ctx.shadowBlur = 0;
-
-            // Zumbis
-            zombies.forEach(z => {
-                ctx.fillStyle = z.color;
-                ctx.fillRect(z.x, z.y, z.w, z.h);
-                // Barra de vida zumbi
-                const barW = 40;
-                const barH = 5;
-                ctx.fillStyle = 'red';
-                ctx.fillRect(z.x, z.y - 10, barW, barH);
-                ctx.fillStyle = 'lime';
-                ctx.fillRect(z.x, z.y - 10, (z.health / z.maxHealth) * barW, barH);
-            });
-
-            // Chefe
-            if (boss) {
-                ctx.fillStyle = 'purple';
-                ctx.shadowColor = 'purple';
-                ctx.shadowBlur = 20;
-                ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
-                ctx.shadowBlur = 0;
-                // Barra de vida chefe no topo
-                ctx.fillStyle = 'red';
-                ctx.fillRect(300, 20, 200, 25);
-                ctx.fillStyle = 'lime';
-                ctx.fillRect(300, 20, (boss.health / boss.maxHealth) * 200, 25);
-            }
-
-            // Balas player
-            bullets.forEach(b => {
-                ctx.fillStyle = b.color;
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
-                ctx.fill();
-            });
-
-            // Balas chefe
-            bossBullets.forEach(b => {
-                ctx.fillStyle = b.color;
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
-                ctx.fill();
-            });
-
-            // UI
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 24px Arial';
-            ctx.textAlign = 'left';
-            ctx.fillText(`Pontos: ${gameState.score}`, 20, 35);
-            ctx.fillText(`Vidas: ${gameState.lives}`, 20, 65);
-            ctx.fillText(`Onda: ${gameState.wave}`, 20, 95);
-            ctx.fillText(`Arma: ${weapons[player.weapon].name}`, 20, 125);
-
-            // Barra de vida player
-            ctx.fillStyle = 'red';
-            ctx.fillRect(620, 20, 160, 25);
-            ctx.fillStyle = 'lime';
-            ctx.fillRect(620, 20, (player.health / player.maxHealth) * 160, 25);
-            ctx.fillStyle = 'white';
-            ctx.font = '20px Arial';
-            ctx.fillText('Saúde', 650, 42);
-
-            if (boss) {
-                ctx.fillStyle = 'white';
-                ctx
