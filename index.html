@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -160,7 +161,6 @@
     }
     .btn-green:hover { background: #218838; }
 
-    /* Modal e Carrinho (mantidos iguais) */
     .modal {
       display: none;
       position: fixed;
@@ -302,45 +302,270 @@
 
   <script>
     const products = [
-      // Produtos originais
-      { id: 1, name: "Luvas de Boxe Profissionais 12oz", category: "luvas", price: 249.90, image: "https://source.unsplash.com/random/600x600/?boxing,gloves", description: "Luvas de 12oz com excelente amortecimento. Ideal para treino e sparring." },
-      { id: 2, name: "Kimono Jiu-Jitsu BJJ Premium", category: "kimono", price: 489.90, image: "https://source.unsplash.com/random/600x600/?jiujitsu", description: "Kimono de alta qualidade em tecido Pearl Weave." },
-      { id: 3, name: "Caneleiras Muay Thai Profissionais", category: "protecao", price: 189.90, image: "https://source.unsplash.com/random/600x600/?muaythai,shin", description: "Caneleiras com excelente proteção para Muay Thai." },
-      { id: 4, name: "Shorts MMA Fight", category: "shorts", price: 129.90, image: "https://source.unsplash.com/random/600x600/?mma,shorts", description: "Shorts leves e resistentes para MMA." },
-      { id: 5, name: "Rashguard Compression", category: "kimono", price: 99.90, image: "https://source.unsplash.com/random/600x600/?rashguard", description: "Rashguard de compressão para grappling." },
-      { id: 6, name: "Luvas MMA 4oz", category: "luvas", price: 179.90, image: "https://source.unsplash.com/random/600x600/?mma,gloves", description: "Luvas de MMA com palma aberta." },
+      // Produtos com imagens mais específicas conforme o nome
+      { id: 1, name: "Luvas de Boxe Profissionais 12oz", category: "luvas", price: 249.90, 
+        image: "https://source.unsplash.com/random/600x600/?boxing+gloves+red", 
+        description: "Luvas de 12oz com excelente amortecimento. Ideal para treino e sparring." },
 
-      // Novos 50 produtos
-      { id: 7, name: "Gi Judo Mizuno Double Weave", category: "judo", price: 649.90, image: "https://source.unsplash.com/random/600x600/?judo,gi", description: "Gi de Judo heavyweight profissional." },
-      { id: 8, name: "Faixa Judo Preta", category: "acessorios", price: 89.90, image: "https://source.unsplash.com/random/600x600/?judo,belt", description: "Faixa preta oficial para Judo." },
-      { id: 9, name: "Gi Karate Branco WKF", category: "karate", price: 279.90, image: "https://source.unsplash.com/random/600x600/?karate,gi", description: "Uniforme de Karate leve aprovado pela WKF." },
-      { id: 10, name: "Dobok Taekwondo Poomsae", category: "taekwondo", price: 219.90, image: "https://source.unsplash.com/random/600x600/?taekwondo,dobok", description: "Dobok oficial para competições de Taekwondo." },
-      { id: 11, name: "Protetor Bucal Gel", category: "acessorios", price: 49.90, image: "https://source.unsplash.com/random/600x600/?mouthguard", description: "Protetor bucal profissional com gel." },
-      { id: 12, name: "Luvas de Karate Mitts", category: "luvas", price: 139.90, image: "https://source.unsplash.com/random/600x600/?karate,gloves", description: "Luvas abertas para treino de Karate." },
-      { id: 13, name: "Caneleiras Taekwondo", category: "protecao", price: 159.90, image: "https://source.unsplash.com/random/600x600/?taekwondo,shin", description: "Caneleiras leves para Taekwondo." },
-      { id: 14, name: "Faixa Karate Vermelha", category: "acessorios", price: 59.90, image: "https://source.unsplash.com/random/600x600/?karate,belt", description: "Faixa vermelha para graduação." },
-      { id: 15, name: "Headgear Taekwondo", category: "protecao", price: 199.90, image: "https://source.unsplash.com/random/600x600/?taekwondo,headgear", description: "Protetor de cabeça para sparring." },
-      { id: 16, name: "Kimono Judo Infantil", category: "judo", price: 229.90, image: "https://source.unsplash.com/random/600x600/?judo,kids", description: "Gi de Judo para crianças." },
+      { id: 2, name: "Kimono Jiu-Jitsu BJJ Premium", category: "kimono", price: 489.90, 
+        image: "https://source.unsplash.com/random/600x600/?bjj+gi", 
+        description: "Kimono de alta qualidade em tecido Pearl Weave." },
 
-      { id: 17, name: "Luvas Boxe 16oz", category: "luvas", price: 289.90, image: "https://source.unsplash.com/random/600x600/?boxing,gloves", description: "Luvas pesadas para sparring." },
-      { id: 18, name: "Rashguard Muay Thai", category: "kimono", price: 119.90, image: "https://source.unsplash.com/random/600x600/?muaythai,rashguard", description: "Rashguard de manga longa." },
-      { id: 19, name: "Protetor de Peito Taekwondo", category: "protecao", price: 249.90, image: "https://source.unsplash.com/random/600x600/?taekwondo,chest", description: "Revestimento de peito obrigatório em competições." },
-      { id: 20, name: "Shorts Muay Thai Tradicional", category: "shorts", price: 149.90, image: "https://source.unsplash.com/random/600x600/?muaythai,shorts", description: "Shorts de seda tailandesa." },
+      { id: 3, name: "Caneleiras Muay Thai Profissionais", category: "protecao", price: 189.90, 
+        image: "https://source.unsplash.com/random/600x600/?muay+thai+shin+guards", 
+        description: "Caneleiras com excelente proteção para Muay Thai." },
 
-      { id: 21, name: "Gi Judo Single Weave", category: "judo", price: 399.90, image: "https://source.unsplash.com/random/600x600/?judo,uniform", description: "Gi leve para treino diário." },
-      { id: 22, name: "Luvas Karate Sparring", category: "luvas", price: 169.90, image: "https://source.unsplash.com/random/600x600/?karate,gloves", description: "Luvas de sparring com proteção." },
-      { id: 23, name: "Dobok Taekwondo Preto", category: "taekwondo", price: 239.90, image: "https://source.unsplash.com/random/600x600/?taekwondo,dobok", description: "Dobok preto para instrutores." },
-      { id: 24, name: "Caneleiras + Instep", category: "protecao", price: 179.90, image: "https://source.unsplash.com/random/600x600/?shin,guards", description: "Caneleiras completas com proteção de pé." },
-      { id: 25, name: "Faixa Judo Marrom", category: "acessorios", price: 79.90, image: "https://source.unsplash.com/random/600x600/?judo,belt", description: "Faixa marrom para graduação." },
+      { id: 4, name: "Shorts MMA Fight", category: "shorts", price: 129.90, 
+        image: "https://source.unsplash.com/random/600x600/?mma+shorts", 
+        description: "Shorts leves e resistentes para MMA." },
 
-      { id: 26, name: "Kimono BJJ Lightweight", category: "kimono", price: 359.90, image: "https://source.unsplash.com/random/600x600/?bjj,gi", description: "Kimono leve para Jiu-Jitsu." },
-      { id: 27, name: "Protetor de Cabeça Boxing", category: "protecao", price: 229.90, image: "https://source.unsplash.com/random/600x600/?boxing,headgear", description: "Headgear com proteção facial." },
-      { id: 28, name: "Luvas MMA Híbridas", category: "luvas", price: 199.90, image: "https://source.unsplash.com/random/600x600/?mma,gloves", description: "Luvas híbridas para striking e grappling." },
-      { id: 29, name: "Gi Karate Heavyweight", category: "karate", price: 329.90, image: "https://source.unsplash.com/random/600x600/?karate,gi", description: "Gi pesado para Kata." },
-      { id: 30, name: "Shorts Judo", category: "shorts", price: 109.90, image: "https://source.unsplash.com/random/600x600/?judo,shorts", description: "Shorts reforçados para treino." },
+      { id: 5, name: "Rashguard Compression", category: "kimono", price: 99.90, 
+        image: "https://source.unsplash.com/random/600x600/?rashguard+compression", 
+        description: "Rashguard de compressão para grappling." },
 
-      // Mais 26 produtos para completar ~56
-      { id: 31, name: "Focus Mitts Muay Thai", category: "acessorios", price: 279.90, image: "https://source.unsplash.com/random/600x600/?focus,mitts", description: "Manoplas para treino de socos e chutes." },
-      { id: 32, name: "Protetor de Virilha", category: "protecao", price: 69.90, image: "https://source.unsplash.com/random/600x600/?groin,protector", description: "Protetor de virilha em metal." },
-      { id: 33, name: "Faixa Taekwondo Preta", category: "acessorios", price: 69.90, image: "https://source.unsplash.com/random
-        
+      { id: 6, name: "Luvas MMA 4oz", category: "luvas", price: 179.90, 
+        image: "https://source.unsplash.com/random/600x600/?mma+gloves", 
+        description: "Luvas de MMA com palma aberta." },
+
+      // Novos produtos com imagens mais condizentes
+      { id: 7, name: "Gi Judo Mizuno Double Weave", category: "judo", price: 649.90, 
+        image: "https://source.unsplash.com/random/600x600/?judo+gi", 
+        description: "Gi de Judo heavyweight profissional." },
+
+      { id: 8, name: "Faixa Judo Preta", category: "acessorios", price: 89.90, 
+        image: "https://source.unsplash.com/random/600x600/?judo+belt+black", 
+        description: "Faixa preta oficial para Judo." },
+
+      { id: 9, name: "Gi Karate Branco WKF", category: "karate", price: 279.90, 
+        image: "https://source.unsplash.com/random/600x600/?karate+gi+white", 
+        description: "Uniforme de Karate leve aprovado pela WKF." },
+
+      { id: 10, name: "Dobok Taekwondo Poomsae", category: "taekwondo", price: 219.90, 
+        image: "https://source.unsplash.com/random/600x600/?taekwondo+dobok", 
+        description: "Dobok oficial para competições de Taekwondo." },
+
+      { id: 11, name: "Protetor Bucal Gel", category: "acessorios", price: 49.90, 
+        image: "https://source.unsplash.com/random/600x600/?mouthguard", 
+        description: "Protetor bucal profissional com gel." },
+
+      { id: 12, name: "Luvas de Karate Mitts", category: "luvas", price: 139.90, 
+        image: "https://source.unsplash.com/random/600x600/?karate+gloves", 
+        description: "Luvas abertas para treino de Karate." },
+
+      { id: 13, name: "Caneleiras Taekwondo", category: "protecao", price: 159.90, 
+        image: "https://source.unsplash.com/random/600x600/?taekwondo+shin+guards", 
+        description: "Caneleiras leves para Taekwondo." },
+
+      { id: 14, name: "Faixa Karate Vermelha", category: "acessorios", price: 59.90, 
+        image: "https://source.unsplash.com/random/600x600/?karate+belt+red", 
+        description: "Faixa vermelha para graduação." },
+
+      { id: 15, name: "Headgear Taekwondo", category: "protecao", price: 199.90, 
+        image: "https://source.unsplash.com/random/600x600/?taekwondo+headgear", 
+        description: "Protetor de cabeça para sparring." },
+
+      { id: 16, name: "Kimono Judo Infantil", category: "judo", price: 229.90, 
+        image: "https://source.unsplash.com/random/600x600/?judo+gi+kids", 
+        description: "Gi de Judo para crianças." },
+
+      { id: 17, name: "Luvas Boxe 16oz", category: "luvas", price: 289.90, 
+        image: "https://source.unsplash.com/random/600x600/?boxing+gloves", 
+        description: "Luvas pesadas para sparring." },
+
+      { id: 18, name: "Rashguard Muay Thai", category: "kimono", price: 119.90, 
+        image: "https://source.unsplash.com/random/600x600/?muay+thai+rashguard", 
+        description: "Rashguard de manga longa." },
+
+      { id: 19, name: "Protetor de Peito Taekwondo", category: "protecao", price: 249.90, 
+        image: "https://source.unsplash.com/random/600x600/?taekwondo+chest+guard", 
+        description: "Revestimento de peito obrigatório em competições." },
+
+      { id: 20, name: "Shorts Muay Thai Tradicional", category: "shorts", price: 149.90, 
+        image: "https://source.unsplash.com/random/600x600/?muay+thai+shorts", 
+        description: "Shorts de seda tailandesa." },
+
+      // Continuação com imagens mais direcionadas (resumo dos demais)
+      { id: 21, name: "Gi Judo Single Weave", category: "judo", price: 399.90, image: "https://source.unsplash.com/random/600x600/?judo+gi", description: "Gi leve para treino diário." },
+      { id: 22, name: "Luvas Karate Sparring", category: "luvas", price: 169.90, image: "https://source.unsplash.com/random/600x600/?karate+sparring+gloves", description: "Luvas de sparring com proteção." },
+      { id: 23, name: "Dobok Taekwondo Preto", category: "taekwondo", price: 239.90, image: "https://source.unsplash.com/random/600x600/?taekwondo+dobok+black", description: "Dobok preto para instrutores." },
+      { id: 24, name: "Caneleiras + Instep", category: "protecao", price: 179.90, image: "https://source.unsplash.com/random/600x600/?shin+guards+instep", description: "Caneleiras completas com proteção de pé." },
+      { id: 25, name: "Faixa Judo Marrom", category: "acessorios", price: 79.90, image: "https://source.unsplash.com/random/600x600/?judo+belt+brown", description: "Faixa marrom para graduação." },
+
+      { id: 26, name: "Kimono BJJ Lightweight", category: "kimono", price: 359.90, image: "https://source.unsplash.com/random/600x600/?bjj+gi", description: "Kimono leve para Jiu-Jitsu." },
+      { id: 27, name: "Protetor de Cabeça Boxing", category: "protecao", price: 229.90, image: "https://source.unsplash.com/random/600x600/?boxing+headgear", description: "Headgear com proteção facial." },
+      { id: 28, name: "Luvas MMA Híbridas", category: "luvas", price: 199.90, image: "https://source.unsplash.com/random/600x600/?mma+hybrid+gloves", description: "Luvas híbridas para striking e grappling." },
+      { id: 29, name: "Gi Karate Heavyweight", category: "karate", price: 329.90, image: "https://source.unsplash.com/random/600x600/?karate+gi+heavy", description: "Gi pesado para Kata." },
+      { id: 30, name: "Shorts Judo", category: "shorts", price: 109.90, image: "https://source.unsplash.com/random/600x600/?judo+shorts", description: "Shorts reforçados para treino." },
+
+      { id: 31, name: "Focus Mitts Muay Thai", category: "acessorios", price: 279.90, image: "https://source.unsplash.com/random/600x600/?focus+mitts+muay+thai", description: "Manoplas para treino de socos e chutes." },
+      { id: 32, name: "Protetor de Virilha", category: "protecao", price: 69.90, image: "https://source.unsplash.com/random/600x600/?groin+protector", description: "Protetor de virilha em metal." },
+      { id: 33, name: "Faixa Taekwondo Preta", category: "acessorios", price: 69.90, image: "https://source.unsplash.com/random/600x600/?taekwondo+belt+black", description: "Faixa preta Dan." },
+      { id: 34, name: "Luvas de Boxe Infantil", category: "luvas", price: 119.90, image: "https://source.unsplash.com/random/600x600/?boxing+gloves+kids", description: "Luvas para crianças." },
+      { id: 35, name: "Rashguard BJJ Long Sleeve", category: "kimono", price: 129.90, image: "https://source.unsplash.com/random/600x600/?bjj+rashguard+long+sleeve", description: "Rashguard de manga longa." },
+
+      { id: 36, name: "Caneleiras Karate", category: "protecao", price: 149.90, image: "https://source.unsplash.com/random/600x600/?karate+shin+guards", description: "Caneleiras para sparring de Karate." },
+      { id: 37, name: "Gi Judo Competition", category: "judo", price: 579.90, image: "https://source.unsplash.com/random/600x600/?judo+gi+competition", description: "Gi aprovado para competições." },
+      { id: 38, name: "Dobok Taekwondo Poomsae Premium", category: "taekwondo", price: 289.90, image: "https://source.unsplash.com/random/600x600/?taekwondo+dobok+premium", description: "Dobok de alta qualidade." },
+      { id: 39, name: "Mouthguard com Case", category: "acessorios", price: 59.90, image: "https://source.unsplash.com/random/600x600/?mouthguard+case", description: "Protetor bucal com estojo." },
+      { id: 40, name: "Luvas Sparring 8oz", category: "luvas", price: 159.90, image: "https://source.unsplash.com/random/600x600/?sparring+gloves", description: "Luvas leves para sparring." },
+
+      { id: 41, name: "Shorts Karate", category: "shorts", price: 99.90, image: "https://source.unsplash.com/random/600x600/?karate+shorts", description: "Shorts brancos para treino." },
+      { id: 42, name: "Protetor de Braço", category: "protecao", price: 89.90, image: "https://source.unsplash.com/random/600x600/?arm+guard", description: "Protetor de antebraço." },
+      { id: 43, name: "Gi Karate Branco Infantil", category: "karate", price: 189.90, image: "https://source.unsplash.com/random/600x600/?karate+gi+kids", description: "Uniforme para crianças." },
+      { id: 44, name: "Faixa Judo Branca", category: "acessorios", price: 39.90, image: "https://source.unsplash.com/random/600x600/?judo+belt+white", description: "Faixa branca iniciante." },
+      { id: 45, name: "Headgear com Face", category: "protecao", price: 259.90, image: "https://source.unsplash.com/random/600x600/?boxing+headgear+face", description: "Protetor de cabeça com grade." },
+
+      { id: 46, name: "Luvas Taekwondo", category: "luvas", price: 129.90, image: "https://source.unsplash.com/random/600x600/?taekwondo+gloves", description: "Luvas de mão aberta." },
+      { id: 47, name: "Rashguard Compression Preta", category: "kimono", price: 109.90, image: "https://source.unsplash.com/random/600x600/?black+rashguard", description: "Rashguard preto básico." },
+      { id: 48, name: "Caneleiras Muay Thai Longas", category: "protecao", price: 209.90, image: "https://source.unsplash.com/random/600x600/?muay+thai+long+shin+guards", description: "Caneleiras longas profissionais." },
+      { id: 49, name: "Shorts BJJ Vale Tudo", category: "shorts", price: 139.90, image: "https://source.unsplash.com/random/600x600/?bjj+shorts", description: "Shorts para No-Gi." },
+      { id: 50, name: "Gi Judo Azul", category: "judo", price: 449.90, image: "https://source.unsplash.com/random/600x600/?blue+judo+gi", description: "Gi azul para competições." },
+
+      { id: 51, name: "Protetor de Tórax Feminino", category: "protecao", price: 179.90, image: "https://source.unsplash.com/random/600x600/?chest+guard+women", description: "Protetor de peito para mulheres." },
+      { id: 52, name: "Luvas Boxe Rosa", category: "luvas", price: 239.90, image: "https://source.unsplash.com/random/600x600/?pink+boxing+gloves", description: "Luvas femininas." },
+      { id: 53, name: "Dobok Taekwondo Branco", category: "taekwondo", price: 199.90, image: "https://source.unsplash.com/random/600x600/?taekwondo+dobok+white", description: "Dobok básico branco." },
+      { id: 54, name: "Faixa Karate Amarela", category: "acessorios", price: 49.90, image: "https://source.unsplash.com/random/600x600/?karate+belt+yellow", description: "Faixa amarela." },
+      { id: 55, name: "Kimono BJJ Competition", category: "kimono", price: 529.90, image: "https://source.unsplash.com/random/600x600/?bjj+competition+gi", description: "Kimono para competições." },
+      { id: 56, name: "Protetor de Canela + Pé", category: "protecao", price: 169.90, image: "https://source.unsplash.com/random/600x600/?shin+guards+foot", description: "Conjunto completo de proteção." }
+    ];
+
+    let cart = [];
+
+    // Funções renderProducts, showProductModal, addToCart, updateCart, etc. (mesmas do código anterior)
+
+    function renderProducts(filteredProducts) {
+      const container = document.getElementById('products');
+      container.innerHTML = '';
+
+      filteredProducts.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <img src="${product.image}" alt="${product.name}">
+          <div class="product-info">
+            <h3>${product.name}</h3>
+            <p class="price">R$ ${product.price.toFixed(2)}</p>
+            <button class="btn view-product" data-id="${product.id}">Ver Detalhes</button>
+            <button class="btn btn-green" data-id="${product.id}">Adicionar ao Carrinho</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.querySelectorAll('.view-product').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          showProductModal(parseInt(e.target.dataset.id));
+        });
+      });
+
+      document.querySelectorAll('.product-card .btn-green').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          addToCart(parseInt(e.target.dataset.id));
+        });
+      });
+    }
+
+    function showProductModal(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+
+      document.getElementById('modal-title').textContent = product.name;
+      document.getElementById('modal-image').src = product.image;
+      document.getElementById('modal-description').textContent = product.description;
+      document.getElementById('modal-price').textContent = `R$ ${product.price.toFixed(2)}`;
+
+      const modal = document.getElementById('product-modal');
+      modal.style.display = 'flex';
+
+      document.getElementById('add-to-cart-modal').onclick = () => {
+        addToCart(product.id);
+        modal.style.display = 'none';
+      };
+    }
+
+    document.getElementById('close-modal').addEventListener('click', () => {
+      document.getElementById('product-modal').style.display = 'none';
+    });
+
+    document.getElementById('product-modal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('product-modal')) {
+        document.getElementById('product-modal').style.display = 'none';
+      }
+    });
+
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+
+      const existing = cart.find(item => item.id === id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ ...product, quantity: 1 });
+      }
+
+      updateCart();
+      alert(`${product.name} foi adicionado ao carrinho!`);
+    }
+
+    function updateCart() {
+      const count = cart.reduce((acc, item) => acc + item.quantity, 0);
+      document.getElementById('cart-count').textContent = count;
+
+      const cartItems = document.getElementById('cart-items');
+      cartItems.innerHTML = '';
+      let total = 0;
+
+      cart.forEach((item, index) => {
+        const subtotal = item.price * item.quantity;
+        total += subtotal;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+          <img src="${item.image}" alt="${item.name}">
+          <div style="flex:1">
+            <h4>${item.name}</h4>
+            <p>R$ ${item.price.toFixed(2)} × ${item.quantity}</p>
+            <button onclick="removeFromCart(${index})" style="color:#c8102e; background:none; border:none; padding:4px 0; cursor:pointer;">Remover</button>
+          </div>
+        `;
+        cartItems.appendChild(div);
+      });
+
+      document.getElementById('cart-total').textContent = total.toFixed(2);
+    }
+
+    window.removeFromCart = function(index) {
+      cart.splice(index, 1);
+      updateCart();
+    };
+
+    // Filtros
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const category = btn.dataset.category;
+        const filtered = category === 'all' 
+          ? products 
+          : products.filter(p => p.category === category);
+
+        renderProducts(filtered);
+      });
+    });
+
+    // Carrinho
+    document.getElementById('cart-btn').addEventListener('click', () => {
+      document.getElementById('cart-sidebar').classList.toggle('open');
+    });
+
+    document.getElementById('close-cart').addEventListener('click', () => {
+      document.getElementById('cart-sidebar').classList.remove('open');
+    });
+
+    // Inicializar
+    renderProducts(products);
+  </script>
+</body>
+</html>
