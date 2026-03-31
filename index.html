@@ -1,115 +1,457 @@
-import sqlite3
-from datetime import datetime
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LutaShop - Artigos para Lutadores</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #c8102e;
+      --dark: #111;
+      --light: #f4f4f4;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #eee; line-height: 1.6; }
+    header {
+      background: var(--dark);
+      padding: 1rem 5%;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .logo {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .cart-icon {
+      position: relative;
+      font-size: 1.8rem;
+      cursor: pointer;
+    }
+    .cart-count {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-# Conexão com o banco de dados SQLite
-def conectar_db():
-    conn = sqlite3.connect('monitoramento.db')
-    return conn
+    .hero {
+      background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://source.unsplash.com/random/1600x900/?mma,fight') center/cover;
+      height: 60vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+    }
+    .hero p { font-size: 1.3rem; max-width: 600px; }
 
-# Criação das tabelas no banco de dados
-def criar_tabelas():
-    conn = conectar_db()
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS empresas (
-            id INTEGER PRIMARY KEY,
-            nome TEXT NOT NULL,
-            cnpj TEXT NOT NULL UNIQUE,
-            data_criacao TEXT,
-            status TEXT
-        );
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS monitoramento (
-            id INTEGER PRIMARY KEY,
-            empresa_id INTEGER,
-            data_monitora TEXT,
-            status_monitoramento TEXT,
-            FOREIGN KEY (empresa_id) REFERENCES empresas(id)
-        );
-    ''')
-    
-    conn.commit()
-    conn.close()
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 5%;
+    }
 
-# Função para cadastrar uma nova empresa
-def cadastrar_empresa(nome, cnpj):
-    conn = conectar_db()
-    cursor = conn.cursor()
-    
-    data_criacao = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    status = 'Ativa'  # Status inicial da empresa
-    
-    cursor.execute('''
-        INSERT INTO empresas (nome, cnpj, data_criacao, status) 
-        VALUES (?, ?, ?, ?)
-    ''', (nome, cnpj, data_criacao, status))
-    
-    conn.commit()
-    conn.close()
+    .filters {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .filter-btn {
+      padding: 0.8rem 1.5rem;
+      background: #222;
+      border: none;
+      color: #eee;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--primary);
+    }
 
-# Função para monitorar o status de uma empresa
-def monitorar_empresa(empresa_id, status_monitoramento):
-    conn = conectar_db()
-    cursor = conn.cursor()
-    
-    data_monitoramento = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
-    # Registra o monitoramento
-    cursor.execute('''
-        INSERT INTO monitoramento (empresa_id, data_monitora, status_monitoramento) 
-        VALUES (?, ?, ?)
-    ''', (empresa_id, data_monitoramento, status_monitoramento))
-    
-    # Atualiza o status da empresa no banco de dados
-    cursor.execute('''
-        UPDATE empresas 
-        SET status = ? 
-        WHERE id = ?
-    ''', (status_monitoramento, empresa_id))
-    
-    conn.commit()
-    conn.close()
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+    .product-card {
+      background: #1a1a1a;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.3s;
+    }
+    .product-card:hover {
+      transform: translateY(-10px);
+    }
+    .product-card img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+    }
+    .product-info {
+      padding: 1.2rem;
+    }
+    .product-info h3 {
+      margin-bottom: 0.5rem;
+    }
+    .price {
+      font-size: 1.4rem;
+      color: var(--primary);
+      font-weight: bold;
+    }
+    .btn {
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.9rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn:hover { background: #a00; }
 
-# Função para gerar relatório de monitoramento
-def gerar_relatorio():
-    conn = conectar_db()
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        SELECT empresas.nome, empresas.status, monitoramento.data_monitora, monitoramento.status_monitoramento 
-        FROM empresas
-        LEFT JOIN monitoramento ON empresas.id = monitoramento.empresa_id
-        ORDER BY monitoramento.data_monitora DESC;
-    ''')
-    
-    relatorio = cursor.fetchall()
-    
-    print("Relatório de Monitoramento de Empresas:")
-    print("Nome da Empresa | Status Atual | Data Monitoramento | Status do Monitoramento")
-    print("-" * 80)
-    for row in relatorio:
-        print(f"{row[0]} | {row[1]} | {row[2]} | {row[3]}")
-    
-    conn.close()
+    /* Modal Produto */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: #1a1a1a;
+      max-width: 900px;
+      width: 90%;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      padding: 1rem;
+      background: #111;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .close { font-size: 2rem; cursor: pointer; }
 
-# Função principal
-def main():
-    criar_tabelas()
-    
-    # Cadastrando algumas empresas para testes
-    cadastrar_empresa('Tech Solutions Ltda', '12.345.678/0001-99')
-    cadastrar_empresa('InovaCorp', '98.765.432/0001-00')
-    
-    # Monitorando o status das empresas
-    monitorar_empresa(1, 'Em Manutenção')  # Empresa 1 em manutenção
-    monitorar_empresa(2, 'Ativa')  # Empresa 2 está ativa
-    
-    # Gerando relatório
-    gerar_relatorio()
+    /* Carrinho */
+    .cart-sidebar {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 400px;
+      height: 100%;
+      background: #111;
+      transition: right 0.4s;
+      z-index: 300;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+    .cart-sidebar.open { right: 0; }
+    .cart-item {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #333;
+      padding-bottom: 1rem;
+    }
+    .cart-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+    .total {
+      font-size: 1.5rem;
+      margin: 2rem 0;
+      text-align: right;
+    }
 
-if __name__ == '__main__':
-    main()
+    footer {
+      background: #0a0a0a;
+      padding: 3rem 5%;
+      text-align: center;
+      margin-top: 4rem;
+    }
+  </style>
+</head>
+<body>
 
+  <header>
+    <nav>
+      <div class="logo">LUTASHOP</div>
+      <div class="cart-icon" id="cart-btn">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-count" id="cart-count">0</span>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div>
+      <h1>Equipamento de Verdadeiro Lutador</h1>
+      <p>Luvas, kimonos, caneleiras, protetores e muito mais para Boxe, MMA, Jiu-Jitsu e Muay Thai</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="filters">
+      <button class="filter-btn active" data-category="all">Todos</button>
+      <button class="filter-btn" data-category="luvas">Luvas</button>
+      <button class="filter-btn" data-category="kimono">Kimonos / Rashguards</button>
+      <button class="filter-btn" data-category="protecao">Proteção</button>
+      <button class="filter-btn" data-category="shorts">Shorts</button>
+    </div>
+
+    <div class="products" id="products"></div>
+  </div>
+
+  <!-- Modal de Produto -->
+  <div class="modal" id="product-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title"></h2>
+        <span class="close" id="close-modal">&times;</span>
+      </div>
+      <div style="display:flex; padding:2rem; gap:2rem;">
+        <img id="modal-image" style="width:45%; border-radius:12px;" alt="">
+        <div>
+          <p id="modal-description"></p>
+          <p class="price" id="modal-price"></p>
+          <button class="btn" id="add-to-cart-modal">Adicionar ao Carrinho</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carrinho Lateral -->
+  <div class="cart-sidebar" id="cart-sidebar">
+    <h2>Seu Carrinho <span id="close-cart" style="float:right; cursor:pointer;">&times;</span></h2>
+    <div id="cart-items"></div>
+    <div class="total">Total: R$ <span id="cart-total">0,00</span></div>
+    <button class="btn" style="background:#28a745;">Finalizar Compra</button>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 LutaShop - Sua loja de artigos de lutas. Todos os direitos reservados.</p>
+  </footer>
+
+  <script>
+    // Produtos de exemplo (você pode adicionar quantos quiser)
+    const products = [
+      {
+        id: 1,
+        name: "Luvas de Boxe Profissionais",
+        category: "luvas",
+        price: 249.90,
+        image: "https://source.unsplash.com/random/600x600/?boxing,gloves",
+        description: "Luvas de 12oz com excelente amortecimento. Ideal para treino e sparring."
+      },
+      {
+        id: 2,
+        name: "Kimono Jiu-Jitsu BJJ Premium",
+        category: "kimono",
+        price: 489.90,
+        image: "https://source.unsplash.com/random/600x600/?jiujitsu",
+        description: "Kimono de alta qualidade, tecido Pearl Weave, reforçado em todos os pontos."
+      },
+      {
+        id: 3,
+        name: "Caneleiras Muay Thai",
+        category: "protecao",
+        price: 189.90,
+        image: "https://source.unsplash.com/random/600x600/?muaythai,shin",
+        description: "Caneleiras profissionais com excelente proteção para treino de Muay Thai."
+      },
+      {
+        id: 4,
+        name: "Shorts MMA Fight",
+        category: "shorts",
+        price: 129.90,
+        image: "https://source.unsplash.com/random/600x600/?mma,shorts",
+        description: "Shorts leves e resistentes para MMA e treinamento."
+      },
+      {
+        id: 5,
+        name: "Rashguard Compression",
+        category: "kimono",
+        price: 99.90,
+        image: "https://source.unsplash.com/random/600x600/?rashguard",
+        description: "Rashguard de compressão de alta qualidade para grappling."
+      },
+      {
+        id: 6,
+        name: "Luvas MMA 4oz",
+        category: "luvas",
+        price: 179.90,
+        image: "https://source.unsplash.com/random/600x600/?mma,gloves",
+        description: "Luvas de MMA profissionais com palma aberta."
+      }
+    ];
+
+    let cart = [];
+
+    // Renderizar produtos
+    function renderProducts(filteredProducts) {
+      const container = document.getElementById('products');
+      container.innerHTML = '';
+
+      filteredProducts.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <img src="${product.image}" alt="${product.name}">
+          <div class="product-info">
+            <h3>${product.name}</h3>
+            <p class="price">R$ ${product.price.toFixed(2)}</p>
+            <button class="btn view-product" data-id="${product.id}">Ver Detalhes</button>
+            <button class="btn" style="background:#28a745; margin-top:8px;" data-id="${product.id}">Adicionar ao Carrinho</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Eventos dos botões
+      document.querySelectorAll('.view-product').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = parseInt(e.target.dataset.id);
+          showProductModal(id);
+        });
+      });
+
+      document.querySelectorAll('.product-card button:not(.view-product)').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = parseInt(e.target.dataset.id);
+          addToCart(id);
+        });
+      });
+    }
+
+    // Mostrar modal do produto
+    function showProductModal(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+
+      document.getElementById('modal-title').textContent = product.name;
+      document.getElementById('modal-image').src = product.image;
+      document.getElementById('modal-description').textContent = product.description;
+      document.getElementById('modal-price').textContent = `R$ ${product.price.toFixed(2)}`;
+
+      const modal = document.getElementById('product-modal');
+      modal.style.display = 'flex';
+
+      document.getElementById('add-to-cart-modal').onclick = () => {
+        addToCart(product.id);
+        modal.style.display = 'none';
+      };
+    }
+
+    // Fechar modal
+    document.getElementById('close-modal').addEventListener('click', () => {
+      document.getElementById('product-modal').style.display = 'none';
+    });
+
+    // Adicionar ao carrinho
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      const existing = cart.find(item => item.id === id);
+
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ ...product, quantity: 1 });
+      }
+
+      updateCart();
+      alert(`${product.name} adicionado ao carrinho!`);
+    }
+
+    // Atualizar carrinho
+    function updateCart() {
+      const count = cart.reduce((acc, item) => acc + item.quantity, 0);
+      document.getElementById('cart-count').textContent = count;
+
+      const cartItems = document.getElementById('cart-items');
+      cartItems.innerHTML = '';
+
+      let total = 0;
+
+      cart.forEach((item, index) => {
+        const subtotal = item.price * item.quantity;
+        total += subtotal;
+
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+          <img src="${item.image}" alt="${item.name}">
+          <div>
+            <h4>${item.name}</h4>
+            <p>R$ ${item.price.toFixed(2)} × ${item.quantity}</p>
+            <button onclick="removeFromCart(${index})" style="color:#c8102e; background:none; border:none; cursor:pointer;">Remover</button>
+          </div>
+        `;
+        cartItems.appendChild(div);
+      });
+
+      document.getElementById('cart-total').textContent = total.toFixed(2);
+    }
+
+    // Remover do carrinho
+    window.removeFromCart = function(index) {
+      cart.splice(index, 1);
+      updateCart();
+    };
+
+    // Filtros
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const category = btn.dataset.category;
+        const filtered = category === 'all' 
+          ? products 
+          : products.filter(p => p.category === category);
+
+        renderProducts(filtered);
+      });
+    });
+
+    // Abrir/Fechar carrinho
+    document.getElementById('cart-btn').addEventListener('click', () => {
+      document.getElementById('cart-sidebar').classList.toggle('open');
+    });
+
+    document.getElementById('close-cart').addEventListener('click', () => {
+      document.getElementById('cart-sidebar').classList.remove('open');
+    });
+
+    // Inicializar
+    renderProducts(products);
+  </script>
+</body>
+</html>
