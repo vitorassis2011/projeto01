@@ -1,279 +1,500 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LutaShop - Artigos para Lutadores</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    :root {
-      --primary: #c8102e;
-      --dark: #111;
-      --light: #f4f4f4;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: 'Segoe UI', sans-serif; 
-      background: #0a0a0a; 
-      color: #eee; 
-      line-height: 1.6; 
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Football Legends Clone</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace; /* Estilo retro */
+            background-color: #222;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
 
-    header {
-      background: var(--dark);
-      padding: 1rem 5%;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    }
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-    .logo { font-size: 2.4rem; font-weight: bold; color: var(--primary); }
+        #game-container {
+            position: relative;
+            text-align: center;
+        }
 
-    .header-buttons button {
-      background: #222;
-      color: white;
-      border: none;
-      padding: 0.7rem 1.2rem;
-      margin-left: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .header-buttons button:hover { background: var(--primary); }
+        canvas {
+            border: 4px solid white;
+            background-color: #4CAF50; /* Cor do gramado se imagem falhar */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            display: none; /* Escondido no inicio */
+        }
 
-    .hero { /* mantido igual */ }
+        /* Interface de Login e Ranking */
+        #ui-layer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid white;
+            width: 300px;
+            z-index: 10;
+        }
 
-    .container { max-width: 1400px; margin: 0 auto; padding: 3rem 5%; }
+        input {
+            padding: 10px;
+            margin: 10px 0;
+            width: 80%;
+            border-radius: 5px;
+            border: none;
+        }
 
-    .products {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 2rem;
-    }
-    .product-card {
-      background: #1a1a1a;
-      border-radius: 12px;
-      overflow: hidden;
-      transition: all 0.3s;
-    }
-    .product-card:hover { transform: translateY(-12px); box-shadow: 0 15px 30px rgba(200, 16, 46, 0.2); }
-    .product-card img { width: 100%; height: 280px; object-fit: cover; }
+        button {
+            padding: 10px 20px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
 
-    .stock {
-      font-size: 0.9rem;
-      margin: 8px 0;
-      color: #4ade80;
-    }
-    .stock.low { color: #facc15; }
-    .stock.out { color: #ef4444; }
+        button:hover { background-color: #e68a00; }
 
-    .btn { /* mantido igual */ }
-    .btn:disabled { background: #555; cursor: not-allowed; }
+        /* Placar */
+        #hud {
+            display: none; /* Escondido no inicio */
+            justify-content: space-between;
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            padding: 0 20px;
+            box-sizing: border-box;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none; /* Não atrapalha cliques */
+        }
 
-    /* Modal Cadastro */
-    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.92); z-index: 200; align-items: center; justify-content: center; }
-
-    .modal-content {
-      background: #1a1a1a;
-      max-width: 500px;
-      width: 90%;
-      border-radius: 12px;
-      padding: 2rem;
-    }
-  </style>
+        #ranking-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
 
-  <header>
-    <nav>
-      <div class="logo">LUTASHOP</div>
-      <div class="header-buttons">
-        <button id="btn-cadastro"><i class="fas fa-user"></i> Cadastro</button>
-        <div class="cart-icon" id="cart-btn">
-          <i class="fas fa-shopping-cart"></i>
-          <span class="cart-count" id="cart-count">0</span>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+        <div id="hud">
+            <div><span id="p1-name-hud">P1</span>: <span id="p1-score">0</span></div>
+            <div><span id="p2-name-hud">IA</span>: <span id="p2-score">0</span></div>
         </div>
-      </div>
-    </nav>
-  </header>
 
-  <!-- Hero e Filtros mantidos iguais (coloque aqui o resto do seu HTML anterior) -->
-
-  <div class="container">
-    <!-- Seus filtros -->
-    <div class="filters"> ... </div>
-    <div class="products" id="products"></div>
-  </div>
-
-  <!-- Modal de Produto (atualizado com estoque) -->
-  <div class="modal" id="product-modal">
-    <div class="modal-content" style="max-width:950px;">
-      <!-- seu modal anterior -->
-      <div style="display:flex; padding:2rem; gap:2rem; flex-wrap:wrap;">
-        <img id="modal-image" style="width:45%; border-radius:12px;" alt="">
-        <div style="flex:1; min-width:280px;">
-          <p id="modal-description"></p>
-          <p class="price" id="modal-price" style="font-size:1.8rem;"></p>
-          <p id="modal-stock" class="stock"></p>
-          <button class="btn" id="add-to-cart-modal">Adicionar ao Carrinho</button>
+        <div id="ui-layer">
+            <h2 id="ui-title">LOGIN</h2>
+            <div id="login-form">
+                <label>Seu Nome:</label><br>
+                <input type="text" id="username" placeholder="Digite seu nick..." maxlength="10"><br>
+                <button onclick="startGame()">Jogar</button>
+            </div>
+            
+            <div id="end-game-message" style="display:none"></div>
+            
+            <div id="ranking-box">
+                <h3>🏆 Ranking 🏆</h3>
+                <ul id="ranking-list">
+                    </ul>
+                <button onclick="showLogin()" style="display:none" id="btn-reset">Jogar Novamente</button>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Modal Cadastro de Cliente -->
-  <div class="modal" id="cadastro-modal">
-    <div class="modal-content">
-      <h2 style="margin-bottom:1.5rem; text-align:center;">Cadastro de Cliente</h2>
-      <form id="form-cadastro">
-        <input type="text" id="nome" placeholder="Nome completo" required><br><br>
-        <input type="text" id="cpf" placeholder="CPF (apenas números)" maxlength="11" required><br><br>
-        <input type="tel" id="telefone" placeholder="Telefone / WhatsApp" required><br><br>
-        <input type="text" id="cep" placeholder="CEP" maxlength="8" required><br><br>
-        <input type="email" id="email" placeholder="E-mail" required><br><br>
-        <button type="submit" class="btn">Cadastrar</button>
-      </form>
-      <button class="btn" style="background:#666; margin-top:10px;" id="close-cadastro">Fechar</button>
-    </div>
-  </div>
+    <script>
+        // --- CONFIGURAÇÕES E ASSETS ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const MAX_GOALS = 10;
+        
+        // Cores e Estilos Básicos (Substitua por Imagens se quiser)
+        const COLORS = {
+            grass: '#2e7d32',
+            lines: '#ffffff',
+            crowd: '#1a1a1a',
+            p1: '#2196F3', // Azul
+            p2: '#f44336', // Vermelho
+            ball: '#ffffff',
+            goal: '#ffffff'
+        };
 
-  <!-- Carrinho lateral (mantido) -->
+        // --- ESTADO DO JOGO ---
+        let gameState = {
+            running: false,
+            p1Name: "Jogador",
+            p2Name: "IA CPU",
+            score: { p1: 0, p2: 0 },
+            keys: {}
+        };
 
-  <script>
-    const products = [
-      { id: 1, name: "Luvas de Boxe Profissionais 12oz", category: "luvas", price: 249.90, 
-        image: "https://source.unsplash.com/random/600x600/?boxing+gloves+red", 
-        description: "Luvas de 12oz com excelente amortecimento.", stock: 45 },
+        // --- OBJETOS DO JOGO ---
+        class Box {
+            constructor(x, y, w, h, color) {
+                this.x = x; this.y = y; this.w = w; this.h = h;
+                this.color = color;
+                this.vx = 0; this.vy = 0;
+                this.speed = 5;
+                this.jumpForce = -12;
+                this.gravity = 0.6;
+                this.onGround = false;
+            }
 
-      { id: 2, name: "Kimono Jiu-Jitsu BJJ Premium", category: "kimono", price: 489.90, 
-        image: "https://source.unsplash.com/random/600x600/?bjj+gi", 
-        description: "Kimono de alta qualidade.", stock: 12 },
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.w, this.h);
+            }
 
-      // ... Adicione "stock: X" em todos os seus produtos
-      // Exemplo rápido para os demais:
-      { id: 3, name: "Caneleiras Muay Thai Profissionais", category: "protecao", price: 189.90, image: "...", description: "...", stock: 28 },
-      // Continue para todos os 56 produtos...
-    ];
+            update() {
+                // Física Básica
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
 
-    let cart = [];
+                // Colisão com o Chão
+                if (this.y + this.h > canvas.height - 40) {
+                    this.y = canvas.height - 40 - this.h;
+                    this.vy = 0;
+                    this.onGround = true;
+                } else {
+                    this.onGround = false;
+                }
 
-    // Render Products com estoque
-    function renderProducts(filteredProducts) {
-      const container = document.getElementById('products');
-      container.innerHTML = '';
-
-      filteredProducts.forEach(product => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `
-          <img src="${product.image}" alt="${product.name}">
-          <div class="product-info">
-            <h3>${product.name}</h3>
-            <p class="price">R$ ${product.price.toFixed(2)}</p>
-            <p class="stock ${product.stock <= 5 ? 'low' : ''} ${product.stock === 0 ? 'out' : ''}">
-              ${product.stock === 0 ? '🔴 Esgotado' : `✅ ${product.stock} em estoque`}
-            </p>
-            <button class="btn view-product" data-id="${product.id}">Ver Detalhes</button>
-            <button class="btn btn-green" data-id="${product.id}" ${product.stock === 0 ? 'disabled' : ''}>
-              Adicionar ao Carrinho
-            </button>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-
-      // Eventos (mesmo código anterior)
-      document.querySelectorAll('.view-product').forEach(btn => {
-        btn.addEventListener('click', (e) => showProductModal(parseInt(e.target.dataset.id)));
-      });
-
-      document.querySelectorAll('.btn-green').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          if (!btn.disabled) addToCart(parseInt(e.target.dataset.id));
-        });
-      });
-    }
-
-    // Modal de Produto atualizado
-    function showProductModal(id) {
-      const product = products.find(p => p.id === id);
-      if (!product) return;
-
-      document.getElementById('modal-title').textContent = product.name;
-      document.getElementById('modal-image').src = product.image;
-      document.getElementById('modal-description').textContent = product.description;
-      document.getElementById('modal-price').textContent = `R$ ${product.price.toFixed(2)}`;
-      document.getElementById('modal-stock').innerHTML = 
-        product.stock === 0 ? 
-        '<span style="color:#ef4444">🔴 Esgotado</span>' : 
-        `Em estoque: <strong>${product.stock}</strong> unidades`;
-
-      const modal = document.getElementById('product-modal');
-      modal.style.display = 'flex';
-
-      document.getElementById('add-to-cart-modal').onclick = () => {
-        if (product.stock > 0) {
-          addToCart(product.id);
-          modal.style.display = 'none';
+                // Limites Laterais
+                if (this.x < 0) this.x = 0;
+                if (this.x + this.w > canvas.width) this.x = canvas.width - this.w;
+            }
         }
-      };
-    }
 
-    function addToCart(id) {
-      const product = products.find(p => p.id === id);
-      if (!product || product.stock <= 0) return;
+        class Player extends Box {
+            constructor(x, y, color, isIA) {
+                super(x, y, 30, 50, color);
+                this.isIA = isIA;
+                this.lastShot = 0;
+            }
+        }
 
-      const existing = cart.find(item => item.id === id);
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        cart.push({ ...product, quantity: 1 });
-      }
+        class Ball {
+            constructor(x, y) {
+                this.x = x; this.y = y; this.radius = 10;
+                this.vx = 0; this.vy = 0;
+                this.gravity = 0.3;
+                this.friction = 0.99;
+                this.bounce = 0.7;
+            }
 
-      product.stock--; // diminui estoque
-      updateCart();
-      alert(`${product.name} adicionado ao carrinho!`);
-      renderProducts(products); // atualiza visual do estoque
-    }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = COLORS.ball;
+                ctx.fill();
+                ctx.closePath();
+            }
 
-    // Cadastro de Cliente
-    document.getElementById('btn-cadastro').addEventListener('click', () => {
-      document.getElementById('cadastro-modal').style.display = 'flex';
-    });
+            update() {
+                this.vy += this.gravity;
+                this.vx *= this.friction;
+                this.x += this.vx;
+                this.y += this.vy;
 
-    document.getElementById('close-cadastro').addEventListener('click', () => {
-      document.getElementById('cadastro-modal').style.display = 'none';
-    });
+                // Colisão com Chão e Teto
+                if (this.y + this.radius > canvas.height - 40) {
+                    this.y = canvas.height - 40 - this.radius;
+                    this.vy = -this.vy * this.bounce;
+                }
+                if (this.y - this.radius < 0) {
+                    this.y = this.radius;
+                    this.vy = -this.vy * this.bounce;
+                }
 
-    document.getElementById('form-cadastro').addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      const cliente = {
-        nome: document.getElementById('nome').value,
-        cpf: document.getElementById('cpf').value,
-        telefone: document.getElementById('telefone').value,
-        cep: document.getElementById('cep').value,
-        email: document.getElementById('email').value,
-        data: new Date().toLocaleDateString('pt-BR')
-      };
+                // Colisão com Paredes
+                if (this.x - this.radius < 0 || this.x + this.radius > canvas.width) {
+                    this.vx = -this.vx * this.bounce;
+                    if(this.x - this.radius < 0) this.x = this.radius;
+                    if(this.x + this.radius > canvas.width) this.x = canvas.width - this.radius;
+                }
+            }
 
-      console.log("Cliente cadastrado:", cliente);
-      alert("✅ Cadastro realizado com sucesso!");
+            reset() {
+                this.x = canvas.width / 2;
+                this.y = canvas.height / 2;
+                this.vx = (Math.random() - 0.5) * 10; // Chute inicial aleatório
+                this.vy = -5;
+            }
+        }
 
-      // Limpa formulário
-      e.target.reset();
-      document.getElementById('cadastro-modal').style.display = 'none';
-    });
+        // --- INICIALIZAÇÃO ---
+        const p1 = new Player(100, 300, COLORS.p1, false);
+        const p2 = new Player(670, 300, COLORS.p2, true);
+        const ball = new Ball(canvas.width / 2, canvas.height / 2);
+        const goals = {
+            left: { x: 0, y: canvas.height - 140, w: 20, h: 100 },
+            right: { x: canvas.width - 20, y: canvas.height - 140, w: 20, h: 100 }
+        };
 
-    // Inicializar
-    renderProducts(products);
-  </script>
+        // --- LÓGICA DO JOGO ---
+
+        function checkCollision(obj1, obj2) {
+            // Colisão Retangulo (Player) - Circulo (Bola)
+            let distX = Math.abs(obj2.x - obj1.x - obj1.w/2);
+            let distY = Math.abs(obj2.y - obj1.y - obj1.h/2);
+
+            if (distX > (obj1.w/2 + obj2.radius)) { return false; }
+            if (distY > (obj1.h/2 + obj2.radius)) { return false; }
+
+            if (distX <= (obj1.w/2)) { return true; } 
+            if (distY <= (obj1.h/2)) { return true; }
+
+            let dx=distX-obj1.w/2;
+            let dy=distY-obj1.h/2;
+            return (dx*dx+dy*dy<=(obj2.radius*obj2.radius));
+        }
+
+        function handleInput() {
+            // Player 1 - WASD
+            p1.vx = 0;
+            if (gameState.keys['a']) p1.vx = -p1.speed;
+            if (gameState.keys['d']) p1.vx = p1.speed;
+            if (gameState.keys['w'] && p1.onGround) p1.vy = p1.jumpForce;
+
+            // Player 1 - Chutes
+            let now = Date.now();
+            if(now - p1.lastShot > 300) { // Cooldown de chute
+                if(checkCollision(p1, ball)) {
+                    if (gameState.keys['x']) { // Chute Forte
+                        ball.vx = (ball.x > p1.x) ? 15 : -15;
+                        ball.vy = -2;
+                        p1.lastShot = now;
+                    }
+                    if (gameState.keys['q']) { // Chute para cima
+                        ball.vx = (ball.x > p1.x) ? 8 : -8;
+                        ball.vy = -15;
+                        p1.lastShot = now;
+                    }
+                }
+            }
+        }
+
+        function updateIA() {
+            // IA Simples para Player 2
+            p2.vx = 0;
+
+            // Se a bola estiver à esquerda, move para a esquerda.
+            if (ball.x < p2.x - 10) {
+                p2.vx = -p2.speed * 0.8; // Um pouco mais lenta
+            } else if (ball.x > p2.x + p2.w + 10) {
+                p2.vx = p2.speed * 0.8;
+            }
+
+            // Pula se a bola estiver alta e próxima
+            if (ball.y < p2.y && Math.abs(ball.x - p2.x) < 50 && p2.onGround) {
+                p2.vy = p2.jumpForce;
+            }
+
+            // Chuta se colidir (sempre forte para a frente)
+            if(checkCollision(p2, ball)) {
+                ball.vx = (ball.x > p2.x) ? 12 : -12;
+                ball.vy = -3;
+            }
+        }
+
+        function checkGoals() {
+            // Gol na Esquerda (P2 pontua)
+            if (ball.x - ball.radius < goals.left.x + goals.left.w && ball.y > goals.left.y) {
+                gameState.score.p2++;
+                resetRound();
+            }
+            // Gol na Direita (P1 pontua)
+            if (ball.x + ball.radius > goals.right.x && ball.y > goals.right.y) {
+                gameState.score.p1++;
+                resetRound();
+            }
+
+            // Atualiza HUD
+            document.getElementById('p1-score').innerText = gameState.score.p1;
+            document.getElementById('p2-score').innerText = gameState.score.p2;
+
+            // Fim de jogo
+            if (gameState.score.p1 >= MAX_GOALS || gameState.score.p2 >= MAX_GOALS) {
+                endGame();
+            }
+        }
+
+        function resetRound() {
+            ball.reset();
+            p1.x = 100; p1.y = 300; p1.vx = 0; p1.vy = 0;
+            p2.x = 670; p2.y = 300; p2.vx = 0; p2.vy = 0;
+        }
+
+        // --- RENDERIZAÇÃO (DESENHO) ---
+        function drawBackground() {
+            // Gramado
+            ctx.fillStyle = COLORS.grass;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Linhas do campo
+            ctx.strokeStyle = COLORS.lines;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(50, 50, canvas.width - 100, canvas.height - 90); // Linha externa
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 50);
+            ctx.lineTo(canvas.width / 2, canvas.height - 40);
+            ctx.stroke(); // Linha central
+            ctx.closePath();
+
+            // Torcida (Simulada com pontinhos)
+            ctx.fillStyle = COLORS.crowd;
+            for(let i=0; i<canvas.width; i+=10) {
+                for(let j=0; j<40; j+=10) {
+                    if(Math.random() > 0.3) ctx.fillRect(i, j, 4, 4);
+                }
+            }
+
+            // Gols (Estrutura)
+            ctx.fillStyle = COLORS.goal;
+            ctx.fillRect(goals.left.x, goals.left.y, goals.left.w, goals.left.h);
+            ctx.fillRect(goals.right.x, goals.right.y, goals.right.w, goals.right.h);
+        }
+
+        function drawEntities() {
+            p1.draw();
+            p2.draw();
+            ball.draw();
+        }
+
+        // --- LOOP PRINCIPAL ---
+        function gameLoop() {
+            if (!gameState.running) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa canvas
+
+            handleInput();
+            updateIA();
+
+            p1.update();
+            p2.update();
+            ball.update();
+
+            // Colisão Player-Bola básica (empurrar)
+            if(checkCollision(p1, ball)) {
+                if(Math.abs(p1.vx) > 1) ball.vx = p1.vx * 1.2;
+            }
+
+            checkGoals();
+            
+            drawBackground();
+            drawEntities();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- INTERFACE E LOGIN ---
+
+        // Gerenciamento de Teclas
+        window.addEventListener('keydown', e => gameState.keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', e => gameState.keys[e.key.toLowerCase()] = false);
+
+        function showLogin() {
+            gameState.running = false;
+            document.getElementById('ui-layer').style.display = 'block';
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('ranking-box').style.display = 'block';
+            document.getElementById('ui-title').innerText = "LOGIN";
+            document.getElementById('end-game-message').style.display = 'none';
+            document.getElementById('btn-reset').style.display = 'none';
+            document.getElementById('gameCanvas').style.display = 'none';
+            document.getElementById('hud').style.display = 'none';
+            updateRankingUI();
+        }
+
+        function startGame() {
+            let name = document.getElementById('username').value;
+            gameState.p1Name = name ? name : "Jogador 1";
+            
+            // Atualiza nomes na tela
+            document.getElementById('p1-name-hud').innerText = gameState.p1Name;
+
+            // Esconde UI, mostra Jogo
+            document.getElementById('ui-layer').style.display = 'none';
+            document.getElementById('gameCanvas').style.display = 'block';
+            document.getElementById('hud').style.display = 'flex';
+
+            // Reseta placar
+            gameState.score = { p1: 0, p2: 0 };
+            resetRound();
+            gameState.running = true;
+            gameLoop();
+        }
+
+        function endGame() {
+            gameState.running = false;
+            let winner = (gameState.score.p1 >= MAX_GOALS) ? gameState.p1Name : gameState.p2Name;
+            
+            saveRanking(gameState.p1Name, gameState.score.p1);
+
+            document.getElementById('ui-layer').style.display = 'block';
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('ui-title').innerText = "FIM DE JOGO";
+            
+            let msgEl = document.getElementById('end-game-message');
+            msgEl.style.display = 'block';
+            msgEl.innerHTML = `<h3>${winner} VENCEU!</h3><p>Placar: ${gameState.score.p1} x ${gameState.score.p2}</p>`;
+            
+            document.getElementById('btn-reset').style.display = 'inline-block';
+            updateRankingUI();
+        }
+
+        // --- SISTEMA DE RANKING (LOCAL STORAGE) ---
+        function saveRanking(name, score) {
+            // Salva apenas se o jogador não for a IA e tiver feito gols
+            if(name === "IA CPU" || score === 0) return;
+
+            let ranking = JSON.parse(localStorage.getItem('futbolRanking')) || [];
+            
+            // Adiciona novo score
+            ranking.push({ name: name, score: score, date: new Date().toLocaleDateString() });
+            
+            // Ordena (maior score primeiro) e limita a 5
+            ranking.sort((a, b) => b.score - a.score);
+            ranking = ranking.slice(0, 5);
+
+            localStorage.setItem('futbolRanking', JSON.stringify(ranking));
+        }
+
+        function updateRankingUI() {
+            let ranking = JSON.parse(localStorage.getItem('futbolRanking')) || [];
+            let listEl = document.getElementById('ranking-list');
+            listEl.innerHTML = ''; // Limpa
+
+            if(ranking.length === 0) {
+                listEl.innerHTML = '<li>Nenhum jogo salvo ainda.</li>';
+                return;
+            }
+
+            ranking.forEach((entry, index) => {
+                let li = document.createElement('li');
+                li.innerHTML = `<b>#${index+1} ${entry.name}</b>: ${entry.score} Gols (${entry.date})`;
+                listEl.appendChild(li);
+            });
+        }
+
+        // Inicia mostrando o Login
+        showLogin();
+
+    </script>
 </body>
 </html>
